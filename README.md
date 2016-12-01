@@ -1,7 +1,7 @@
 # Heroku spark bot template
 Template for a RESTful api with most of the setup pre configured
 
-## An quick example setup
+## An example quick setup
 
 1. Make a fork of this repo
 
