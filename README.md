@@ -1,13 +1,20 @@
-# Generic bot
-RESTful api for spark bots
+# Heroku spark bot template
+Template for a RESTful api with most of the setup pre configured
 
-Setup
+## An example quick setup
 
-1. Change the name of the app in app.json before deploying in heroku
+1. Make a fork of this repo
 
-2. bot\_helpers.py needs your spark bot's personId to interract with spark
+2. Create a spark bot
 
-3. After deploying you must send an access token before interacting on spark
-    ```bash
-    curl - H "Content-Type: application/json" -X POST -d '{"token": "\<bot_token\>"}' https://\<bot\_name\>.herokuapp.com/token
-    ```
+3. Create a (free hobby-dev) heroku web app
+
+4. Change the name field in app.json to match your heroku app name (probably optional)
+
+5. Configure the Heroku environment variables as follows:
+    
+    TOKEN=**Your bot's access token**
+    
+    PERSON_ID=**Your bot's personId**
+    
+6. Setup Heroku to autodeploy from pushes to your github repo
