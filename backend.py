@@ -3,7 +3,7 @@
     Main backend where spark messages land and are parsed
 '''
 import re
-from bot_helpers import MENTION_REGEX, PERSON_ID
+from bot_helpers import MENTION_REGEX, PERSON_ID, create_message
 
 
 class MessageHandler:
@@ -48,4 +48,4 @@ class MessageHandler:
             data['markdown'] = text
         else:
             data['text'] = text
-        self.api_calls.create_message(data=data)
+        create_message(data=data)
