@@ -17,9 +17,6 @@ class MessageHandler:
     # regex for commands
     help_pattern = '(?i)\help'
 
-    def __init__(self, api_calls):
-        self.api_calls = api_calls
-
     def parse_message(self, message):
         ''' parse a generic message from spark '''
         room = message.get('roomId')
