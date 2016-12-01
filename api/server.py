@@ -35,9 +35,7 @@ class Server:
         except Exception as err:
             print(err)
 
-    # example of serving up an image
-    @picture('/images/letter')
+    @picture('/images/avatar')
     def letter_pic(self):
-        ''' picture of a letter (uses by the ll game) '''
-        # name of an image in ./images/
-        return 'letter_big.jpg'
+        ''' picture to use for the dominion bot image '''
+        return 'dominion.jpg'
