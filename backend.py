@@ -6,6 +6,22 @@ import re
 from bot_helpers import MENTION_REGEX, PERSON_ID, create_message
 
 
+cmd_list = []
+
+
+def cmd(regex):
+    def cmd_decorator(fn):
+        def inner(obj, text, **kwargs):
+            match = re.match(regex, text)
+            if not match:
+                print('no match with {}'.format(regex))
+                return
+            return fn(obj, *match.groups(), **kwargs)
+        cmd_list.append(inner)
+        return inner
+    return cmd_decorator
+
+
 class MessageHandler:
     ''' handles spark messages '''
 
@@ -13,9 +29,6 @@ class MessageHandler:
         '#  Help'
         '* There is no help for this template\n'
     )
-
-    # regex for commands
-    help_pattern = '(?i)\help'
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
@@ -34,10 +47,12 @@ class MessageHandler:
         text = re.sub(PERSON_ID, '', text).strip()
 
         print('Saw message - {}'.format(text))
+        for func in cmd_list:
+            func(self, text, room=room, sender=sender)
 
-        # help message
-        if re.match(self.help_pattern, text):
-            self.send_message(room, self.help_text, markdown=True)
+    @cmd('(?i)help')
+    def send_help(self, **kwargs):
+        self.send_message(kwargs.get('room'), self.help_text, markdown=True)
 
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
