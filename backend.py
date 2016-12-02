@@ -3,6 +3,7 @@
     Main backend where spark messages land and are parsed
 '''
 import re
+import os
 from bot_helpers import MENTION_REGEX, PERSON_ID, create_message
 
 
@@ -30,6 +31,11 @@ class MessageHandler:
         '* There is no help for this template\n'
     )
 
+    def __init__(self):
+        hello_rooms = os.environ['ROOMS'].aplit(',')
+        for room in hello_rooms:
+            self.send_message(room, 'Hello')
+
     def parse_message(self, message):
         ''' parse a generic message from spark '''
         room = message.get('roomId')
@@ -45,7 +51,9 @@ class MessageHandler:
             # remove mentions of the bot and strip whitespace
             text = re.sub(PERSON_ID, '', text).strip()
         else:
-            text = message['text']
+            print(message)
+            text = message.get('text')
+            print(text)
 
         print('Saw message - {}'.format(text))
         for func in cmd_list:
