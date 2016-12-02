@@ -32,7 +32,7 @@ class MessageHandler:
     )
 
     def __init__(self):
-        hello_rooms = os.environ['ROOMS'].aplit(',')
+        hello_rooms = os.environ['ROOMS'].split(',')
         for room in hello_rooms:
             self.send_message(room, 'Hello')
 
