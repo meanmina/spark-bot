@@ -34,17 +34,18 @@ class MessageHandler:
         ''' parse a generic message from spark '''
         room = message.get('roomId')
         sender = message.get('personId')
-        html = message.get('html')
-
-        # possible check for missing fields
-        if None in [room, sender, html]:
-            pass
-
-        # swap all mentions for the person_id
-        text = re.sub(MENTION_REGEX, '\g<1>', html)
-
-        # remove mentions of the bot and strip whitespace
-        text = re.sub(PERSON_ID, '', text).strip()
+        # use html if we have it (it has more information)
+        if 'html' in message:
+            text = message['html']
+            # swap all mentions for the person_id
+            text = re.sub(MENTION_REGEX, '\g<1>', text)
+            # replace html paragraphs with newlines
+            text = re.sub('<p>', '', text)
+            text = re.sub('</p>', '\n\n', text)
+            # remove mentions of the bot and strip whitespace
+            text = re.sub(PERSON_ID, '', text).strip()
+        else:
+            text = message['text']
 
         print('Saw message - {}'.format(text))
         for func in cmd_list:
