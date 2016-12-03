@@ -27,8 +27,8 @@ class MessageHandler:
     ''' handles spark messages '''
 
     help_text = (
-        '#  Help'
-        '* There is no help for this template\n'
+        '###Help\n'
+        'There is nothing to really help with'
     )
 
     def __init__(self):
@@ -59,6 +59,8 @@ class MessageHandler:
         for func in cmd_list:
             func(self, text, room=room, sender=sender)
 
+    # example of a command decorator
+    # use regex to match a message, groups with be passed in as *args
     @cmd('(?i)help')
     def send_help(self, **kwargs):
         self.send_message(kwargs.get('room'), self.help_text, markdown=True)
