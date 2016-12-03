@@ -40,7 +40,7 @@ class MessageHandler:
         ''' parse a generic message from spark '''
         room = message.get('roomId')
         sender = message.get('personId')
-        if sender = PERSON_ID:
+        if sender == PERSON_ID:
             return
         # use html if we have it (it has more information)
         if 'html' in message:
