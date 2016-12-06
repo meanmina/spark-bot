@@ -4,15 +4,28 @@
 '''
 import re
 import os
-from bot_helpers import MENTION_REGEX, PERSON_ID, create_message
+from random import choice
+from bot_helpers import MENTION_REGEX, PERSON_ID, create_message, list_memberships
+from dominion import Dominion
 
 
 cmd_list = []
 
+INSULTS = [
+    'has eyes like a pug\'s eyes - oversized, dry and susceptible to ulcers',
+    'has a spine like a pug\'s spine - rounded and likely to cause back pane',
+    'has a nose like a pugs\'s nose - bearly able to allow air to pass through',
+    'has a brain like a pug\'s brain - likely to get encephalitis, have seizures and cause death',
+]
 
-def cmd(regex):
+
+def cmd(regex, tag=False):
     def cmd_decorator(fn):
         def inner(obj, text, **kwargs):
+            if tag:
+                if PERSON_ID not in text:
+                    return
+            text = re.sub(PERSON_ID, '', text).strip()
             match = re.match(regex, text)
             if not match:
                 print('no match with {}'.format(regex))
@@ -27,8 +40,14 @@ class MessageHandler:
     ''' handles spark messages '''
 
     help_text = (
-        '###Help\n'
-        'There is nothing to really help with'
+        '##Help\n'
+        '####Setup\n'
+        'Use the following commands for game setup by tagging the bot in the message\n'
+        '* **help**: Show this message\n'
+        '* **new**: Create a new game - currently does nothing\n'
+        '####In Progress\n'
+        'In play you not longer need to tag the bot\n'
+        '* **smack** <tag>: Send and insult\n'
     )
 
     def __init__(self, db_conn):
@@ -51,8 +70,6 @@ class MessageHandler:
             # replace html paragraphs with newlines
             text = re.sub('<p>', '', text)
             text = re.sub('</p>', '\n\n', text)
-            # remove mentions of the bot and strip whitespace
-            text = re.sub(PERSON_ID, '', text).strip()
         else:
             print(message)
             text = message.get('text')
@@ -62,12 +79,6 @@ class MessageHandler:
         for func in cmd_list:
             func(self, text, room=room, sender=sender)
 
-    # example of a command decorator
-    # use regex to match a message, groups with be passed in as *args
-    @cmd('(?i)help')
-    def send_help(self, **kwargs):
-        self.send_message(kwargs.get('room'), self.help_text, markdown=True)
-
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
         if markdown:
@@ -75,3 +86,28 @@ class MessageHandler:
         else:
             data['text'] = text
         create_message(data=data)
+
+    # example of a command decorator
+    # use regex to match a message, groups with be passed in as *args
+    @cmd('(?i)help', tag=True)
+    def send_help(self, room, **kwargs):
+        self.send_message(room, self.help_text, markdown=True)
+
+    @cmd('(?i)new', tag=True)
+    def create_game(self, room, **kwargs):
+        if room in self.games:
+            self.send_message(room, 'Game already in {}'.format(self.games[room].state))
+        else:
+            self.games[kwargs.get('room')] = Dominion(admin=kwargs.get('sender'))
+
+    @cmd('(?i)smack (\w)')
+    def smack(self, target, room, **kwargs):
+        data = {'roomId': kwargs.get('room')}
+        people = list_memberships(data=data)
+        for person in people['items']:
+            name = person.get('personDisplayName')
+            if target == name or target == person['id']:
+                self.send_message(room, '{} {}'.format(name, choice(INSULTS)))
+                break
+        else:
+            self.send_message(room, 'It\'s rude to talk about people behind their back')

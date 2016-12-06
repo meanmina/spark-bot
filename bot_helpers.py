@@ -18,6 +18,8 @@ ADMIN_HEADERS = {
     "Authorization": "Bearer {}".format(os.environ['ADMIN_TOKEN']),
 }
 
+PREFIX = 'https://api.ciscospark.com/v1/'
+
 
 def get_person_info(person_id):
     r = requests.get(
