@@ -102,7 +102,7 @@ class MessageHandler:
 
     @cmd('(?i)smack (\w)')
     def smack(self, target, room, **kwargs):
-        data = {'roomId': kwargs.get('room')}
+        data = {'roomId': room}
         people = list_memberships(data=data)
         print(people)
         for person in people['items']:
