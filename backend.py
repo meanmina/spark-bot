@@ -13,8 +13,8 @@ cmd_list = []
 
 INSULTS = [
     'has eyes like a pug\'s eyes - oversized, dry and susceptible to ulcers',
-    'has a spine like a pug\'s spine - rounded and likely to cause back pane',
-    'has a nose like a pugs\'s nose - bearly able to allow air to pass through',
+    'has a spine like a pug\'s spine - rounded and likely to cause back pain',
+    'has a nose like a pugs\'s nose - barely able to allow air to pass through',
     'has a brain like a pug\'s brain - likely to get encephalitis, have seizures and cause death',
 ]
 
