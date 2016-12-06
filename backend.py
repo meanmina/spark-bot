@@ -100,13 +100,14 @@ class MessageHandler:
         else:
             self.games[kwargs.get('room')] = Dominion(admin=kwargs.get('sender'))
 
-    @cmd('(?i)smack (\w)')
+    @cmd('(?i)smack ([\w ]*)')
     def smack(self, target, room, **kwargs):
         data = {'roomId': room}
         people = list_memberships(data=data)
-        print(people)
         for person in people['items']:
             name = person.get('personDisplayName')
+            print(name)
+            print(person['personId'])
             if target == name or target == person['personId']:
                 self.send_message(room, '{} {}'.format(name, choice(INSULTS)))
                 break
