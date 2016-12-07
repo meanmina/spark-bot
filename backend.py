@@ -12,11 +12,13 @@ from dominion import Dominion
 cmd_list = []
 
 INSULTS = [
-    'has eyes like a pug\'s eyes - oversized, dry and susceptible to ulcers',
-    'has a spine like a pug\'s spine - rounded and likely to cause back pain',
-    'has a nose like a pugs\'s nose - barely able to allow air to pass through',
-    'has a brain like a pug\'s brain - likely to get encephalitis, have seizures and cause death',
+    'You should be nicer to',
 ]
+#     'has eyes like a pug\'s eyes - oversized, dry and susceptible to ulcers',
+#     'has a spine like a pug\'s spine - rounded and likely to cause back pain',
+#     'has a nose like a pugs\'s nose - barely able to allow air to pass through',
+#     'has a brain like a pug\'s brain - likely to get encephalitis, have seizures and cause death',
+# ]
 
 
 def cmd(regex, tag=False):
@@ -42,12 +44,12 @@ class MessageHandler:
     help_text = (
         '##Help\n'
         '####Setup\n'
-        'Use the following commands for game setup by tagging the bot in the message\n'
+        'Use the following commands for game setup by tagging me in the message\n'
         '* **help**: Show this message\n'
-        '* **new**: Create a new game - currently does nothing\n'
+        '* **new**: Create a new game - currently does nothing\n\n'
         '####In Progress\n'
-        'In play you not longer need to tag the bot\n'
-        '* **smack** <tag>: Send and insult\n'
+        'In play you no longer need to tag me\n'
+        '* **smack** _tag_: Send and insult\n'
     )
 
     def __init__(self, db_conn):
@@ -109,7 +111,7 @@ class MessageHandler:
             print(name)
             print(person['personId'])
             if target == name or target == person['personId']:
-                self.send_message(room, '{} {}'.format(name, choice(INSULTS)))
+                self.send_message(room, '{} {}'.format(choice(INSULTS), name))
                 break
         else:
             self.send_message(room, 'It\'s rude to talk about people behind their back')
