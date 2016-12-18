@@ -133,7 +133,7 @@ class MessageHandler:
             if sender == game.admin:
                 game.start()
             else:
-                send_message(room, 'No games are active in this room')
+                send_message(room, 'Only the game creator can start')
         else:
             send_message(room, 'Can\'t start the game right now')
 

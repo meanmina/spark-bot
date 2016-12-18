@@ -3,8 +3,8 @@ from itertools import cycle
 from random import shuffle
 from copy import copy
 from bot_helpers import send_message, get_person_info
-from cards import Action, Treasure, STARTING_CARDS, VICTORY_CARDS, TREASURE_CARDS, KINGDOM_CARDS, \
-                  Curse, Province
+from cards import Action, Treasure, Victory, STARTING_CARDS, VICTORY_CARDS, TREASURE_CARDS, \
+                  KINGDOM_CARDS, Curse, Province
 
 
 class EndGameException(Exception):
@@ -25,9 +25,8 @@ class Player:
         self.hand = []
         self.discards = []
         self.in_play = []
-        self.deck = STARTING_CARDS
+        self.deck = copy(STARTING_CARDS)
         shuffle(self.deck)
-        self.new_hand()
 
     def __repr__(self):
         return self.nickname
@@ -96,14 +95,14 @@ class Player:
     def hand_as_message(self):
         actions = [card.name for card in self.hand if isinstance(card, Action)]
         treasures = [card.name for card in self.hand if isinstance(card, Treasure)]
-        victories = [card.name for card in self.hand if isinstance(card, Treasure)]
+        victories = [card.name for card in self.hand if isinstance(card, Victory)]
         message = ''
         if actions:
-            message += '**Actions**: {}\n'.format(', '.join(actions))
+            message += '**Actions**: {}\n\n'.format(', '.join(actions))
         if treasures:
-            message += '**Treasures**: {}\n'.format(', '.join(treasures))
+            message += '**Treasures**: {}\n\n'.format(', '.join(treasures))
         if victories:
-            message += '**Victories**: {}\n'.format(', '.join(victories))
+            message += '**Victories**: {}\n\n'.format(', '.join(victories))
         message += '**actions** {} - **treasure** {} - **buys** {}'.format(
             self.actions,
             self.treasure,
