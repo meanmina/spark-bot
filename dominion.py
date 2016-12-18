@@ -4,7 +4,7 @@ from random import shuffle
 from copy import copy
 from bot_helpers import send_message, get_person_info
 from cards import Action, Treasure, STARTING_CARDS, VICTORY_CARDS, TREASURE_CARDS, KINGDOM_CARDS, \
-                  Curse
+                  Curse, Province
 
 
 class EndGameException(Exception):
@@ -146,7 +146,7 @@ class Dominion:
         return card()
 
     def next_turn(self):
-        if len(self.empty_stacks) >= 3 or self.board['province'][1] == 0:
+        if len(self.empty_stacks) >= 3 or self.board[Province] == 0:
             # Do end game stuff here
             return
         self.turn.end_turn()
@@ -173,7 +173,7 @@ class Dominion:
     def identify_card(self, card_search):
         ''' take a string card input and return a card object '''
         regex = re.compile('(?i){}'.format(card_search))
-        matches = [card for card in self.board.keys() if regex.match(card.name)]
+        matches = [card for card in self.board if regex.match(card.name)]
         if len(matches) > 1:
             send_message(self.room, '{} matches any of: {}'.format(card_search, matches))
         elif len(matches) == 0:
