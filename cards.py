@@ -98,8 +98,9 @@ class Malitia(Action):
 
     def action(self, game):
         super().action(game)
-        attacked_player = next(game.turn_order)
-        while attacked_player != game.turn:
+        for attacked_player in game.turn_order:
+            if attacked_player == game.turn:
+                break
             if attacked_player.protected:
                 continue
             num_to_discard = len(attacked_player.hand) - 3
@@ -132,8 +133,9 @@ class Witch(Action):
 
     def action(self, game):
         super().action(game)
-        attacked_player = next(game.turn_order)
-        while attacked_player != game.turn:
+        for attacked_player in game.turn_order:
+            if attacked_player == game.turn:
+                break
             if attacked_player.protected:
                 continue
             try:
