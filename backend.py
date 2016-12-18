@@ -39,8 +39,9 @@ def cmd(regex, tag=False, turn=False):
                 if game is None:
                     return
                 if game.state != 'progress':
-                    if game.state == 'waiting':
-                        send_message(room, 'Waiting for one or more players to select a card')
+                    return
+                if len(game.waiting_public) + len(game.waiting_private) > 0:
+                    send_message(room, 'Waiting for one or more players to select a card')
                     return
                 if sender != game.turn.id:
                     return

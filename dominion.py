@@ -113,6 +113,8 @@ class Dominion:
         self.board = {}
         self.empty_stacks = set()
         self.state = 'setup'
+        self.waiting_public = []
+        self.waiting_private = []
 
     def add_player(self, player_id, nickname):
         ''' add a new player to game in setup '''
