@@ -1,9 +1,10 @@
+import re
 from itertools import cycle
 from random import shuffle
 from copy import copy
-from bot_helpers import send_message
+from bot_helpers import send_message, get_person_info
 from cards import Action, Treasure, STARTING_CARDS, VICTORY_CARDS, TREASURE_CARDS, KINGDOM_CARDS, \
-                  Curse, Witch
+                  Curse
 
 
 class EndGameException(Exception):
@@ -13,10 +14,12 @@ class EndGameException(Exception):
 class Player:
     ''' player class '''
 
-    def __init__(self, person_id, group_room):
+    def __init__(self, person_id, nickname, group_room):
         ''' new player '''
-        # TODO set up 1 on 1 room with player
-        # TODO set up player name
+        if nickname is None:
+            person_info = get_person_info(person_id)
+            nickname = person_info['displayName']
+        self.nickname = nickname
         self.group_room = group_room
         self.id = person_id
         self.hand = []
@@ -25,6 +28,9 @@ class Player:
         self.deck = STARTING_CARDS
         shuffle(self.deck)
         self.new_hand()
+
+    def __repr__(self):
+        return self.nickname
 
     def new_hand(self):
         for _ in range(5):
@@ -58,7 +64,7 @@ class Player:
         for owned_card in self.hand:
             if isinstance(owned_card, card):
                 return [True, owned_card]
-        return [False, 'You Don\'t have a {}'.format(card.name)]
+        return [False, 'You Don\'t have a {}'.format(card)]
 
     def end_turn(self):
         while self.in_play:
@@ -75,6 +81,12 @@ class Player:
         elif place == 'deck':
             self.deck.append(card)
 
+    def discard(self, card):
+        for i, owned_card in enumerate(self.hand):
+            if isinstance(owned_card, card):
+                self.discards.append(self.hand.pop(i))
+                return True
+
     @property
     def treasure(self):
         in_hand = sum([card.value for card in self.hand if isinstance(card, Treasure)])
@@ -84,6 +96,11 @@ class Player:
     def hand_as_message(self):
         return 'Bugger all'
 
+    @property
+    def protected(self):
+        # TODO check for moats
+        return False
+
 
 class Dominion:
     ''' Dominion card game '''
@@ -92,38 +109,38 @@ class Dominion:
         ''' create new game '''
         self.room = room
         self.admin_id = admin
-        self.players = [Player(admin, self.room)]
+        self.players = []
         self.board = {}
         self.empty_stacks = set()
         self.state = 'setup'
 
-    def add_player(self, player_id):
+    def add_player(self, player_id, nickname):
         ''' add a new player to game in setup '''
         if player_id in [player.id for player in self.players]:
             send_message(self.room, 'You are already in this game')
         else:
-            self.players.append(Player(player_id, self.room))
+            self.players.append(Player(player_id, nickname, self.room))
 
     def start(self):
         ''' Start the game '''
         self.state = 'progress'
         shuffle(self.players)
         send_message(self.room, 'Turn order is: {}'.format(', '.join(
-            player.name for player in self.players
+            repr(player) for player in self.players
         )))
         self.turn_order = cycle(self.players)
         self.turn = next(self.turn_order)
         self.make_board(len(self.players))
 
-    def take_card(self, card_type):
-        cards_left = self.board[card_type]
+    def take_card(self, card):
+        cards_left = self.board[card]
         if cards_left == 0:
             raise IndexError('No cards left on stack')
         elif cards_left == 1:
-            self.empty_stacks.add(card_type)
-            send_message(self.room, 'The last {} has been taken'.format(card_type.name))
-        self.board[card_type] -= 1
-        return card_type()
+            self.empty_stacks.add(card)
+            send_message(self.room, 'The last {} has been taken'.format(card))
+        self.board[card] -= 1
+        return card()
 
     def next_turn(self):
         if len(self.empty_stacks) >= 3 or self.board['province'][1] == 0:
@@ -136,23 +153,30 @@ class Dominion:
 
     def make_board(self, num_players):
         # Add base cards
-        for card_type in VICTORY_CARDS:
-            self.board[card_type] = 8 if num_players == 2 else 12
-        for card_type in TREASURE_CARDS:
-            in_hand = 3 * num_players if card_type.name == 'copper' else 0
-            self.board[card_type] = card_type.num_in_game - in_hand
+        for card in VICTORY_CARDS:
+            self.board[card] = 8 if num_players == 2 else 12
+        for card in TREASURE_CARDS:
+            in_hand = 3 * num_players if repr(card) == 'copper' else 0
+            self.board[card] = card.num_in_game - in_hand
         # add kingdom cards
         kingdom_cards = copy(KINGDOM_CARDS)
         shuffle(kingdom_cards)
-        for card_type in kingdom_cards[:10]:
-            self.board[card_type] = 10
-            if card_type == Witch:  # special case to add curses
+        for card in kingdom_cards[:2]:
+            self.board[card] = 10
+            if repr(card) == 'witch':  # special case to add curses
                 self.board[Curse] = (num_players - 1) * 10
         self.trash = []
 
-    def select_card(self, card):
+    def identify_card(self, card_search):
         ''' take a string card input and return a card object '''
-        pass
+        regex = re.compile('(?i){}'.format(card_search))
+        matches = [card for card in self.board.keys() if regex.match(card.name)]
+        if len(matches) > 1:
+            send_message(self.room, '{} matches any of: {}'.format(card_search, matches))
+        elif len(matches) == 0:
+            send_message(self.room, '{} does not match any cards'.format(card_search))
+        else:
+            return matches[0]
 
     def play(self, card):
         ''' player plays and action card '''
@@ -181,9 +205,5 @@ class Dominion:
             self.next_turn()
 
     def done(self):
-        ''' player is done with theit turn '''
+        ''' player is done with their turn '''
         self.next_turn()
-
-    def select(self, card):
-        ''' when the game is expecting player to select a card '''
-        pass

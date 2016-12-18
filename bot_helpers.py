@@ -37,8 +37,11 @@ def get_message_info(message_id):
     return json.loads(r.text)
 
 
-def send_message(room, text, markdown=False):
-    data = {'roomId': room}
+def send_message(room, text, markdown=False, direct=False):
+    if direct:
+        data = {'toPersonId': room}
+    else:
+        data = {'roomId': room}
     if markdown:
         data['markdown'] = text
     else:

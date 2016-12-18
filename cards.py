@@ -3,7 +3,8 @@
 # Parent card classes
 class Card:
     ''' Card object '''
-    pass
+    def __repr__(self):
+        return self.name
 
 
 class Victory(Card):
@@ -96,8 +97,14 @@ class Malitia(Action):
 
     def action(self, game):
         super().action(game)
-        # Do fancy discarding things
-        pass
+        attacked_player = next(game.turn_order)
+        while attacked_player != game.turn:
+            if attacked_player.protected:
+                continue
+            game.waiting_public.append([
+                attacked_player.id,
+                attacked_player.discard
+            ])
 
 
 class Witch(Action):
@@ -113,6 +120,8 @@ class Witch(Action):
         super().action(game)
         attacked_player = next(game.turn_order)
         while attacked_player != game.turn:
+            if attacked_player.protected:
+                continue
             try:
                 attacked_player.gain_card(game.take_card(Curse))
             except IndexError:
@@ -122,6 +131,7 @@ class Witch(Action):
 STARTING_CARDS = [Estate()] * 3 + [Copper()] * 7
 VICTORY_CARDS = [Estate, Duchy, Province]
 TREASURE_CARDS = [Copper, Silver, Gold]
-
 KINGDOM_CARDS = [
+    Malitia,
+    Witch
 ]

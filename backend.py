@@ -20,33 +20,30 @@ INSULTS = [
 # ]
 
 
-def cmd(regex, tag=False, turn=False, waiting_turn=False):
+def cmd(regex, tag=False, turn=False):
     def cmd_decorator(fn):
         def inner(obj, text, **kwargs):
             if tag:
                 if PERSON_ID not in text:
                     return
-            room = kwargs.get('room')
-            sender = kwargs.get('sender')
-            if waiting_turn:
-                game = obj.waiting_turns.get(sender)
-                if game is None:
-                    return
-                kwargs['game'] = game
-            if turn:
-                game = obj.games.get(room)
-                if room is None:
-                    return
-                if game.state != 'progress':
-                    return
-                if sender != game.turn.id:
-                    return
-                kwargs['game'] = game
+            room = kwargs['room']
+            sender = kwargs['sender']
+            game = obj.games.get(room)
+            kwargs['game'] = game
             text = re.sub(PERSON_ID, '', text).strip()
             match = re.match(regex, text)
             if not match:
                 print('no match with {}'.format(regex))
                 return
+            if turn:
+                if game is None:
+                    return
+                if game.state != 'progress':
+                    if game.state == 'waiting':
+                        send_message(room, 'Waiting for one or more players to select a card')
+                    return
+                if sender != game.turn.id:
+                    return
             return fn(obj, *match.groups(), **kwargs)
         cmd_list.append(inner)
         return inner
@@ -72,9 +69,6 @@ class MessageHandler:
         self.send_message(self.admin_room, 'Hello')
 
         self.db_cur = db_conn.cursor()
-
-        # people we are waiting for a 1:1 message from
-        self.waiting_turns = {}
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
@@ -107,19 +101,20 @@ class MessageHandler:
         send_message(room, self.help_text, markdown=True)
 
     # Setup commands
-    @cmd('(?i)new', tag=True)
-    def create_game(self, room, sender):
+    @cmd('(?i)new(?: as )?(\w+)?', tag=True)
+    def create_game(self, nickname, room, sender):
         if room in self.games:
             send_message(room, 'Game already in {}'.format(self.games[room].state))
         else:
             self.games[room] = Dominion(admin=sender, room=room)
+            self.games[room].add_player(sender, nickname)
 
-    @cmd('(?i)join', tag=True)
-    def join_game(self, room, sender):
+    @cmd('(?i)join(?: as )?(\w+)?', tag=True)
+    def join_game(self, nickname, room, sender):
         if room not in self.games:
             send_message(room, 'No games are active in this room')
         elif self.games[room].state == 'setup':
-            self.games[room].add_player(sender)
+            self.games[room].add_player(sender, nickname)
         else:
             send_message(room, 'Can\'t join the game right now')
 
@@ -136,8 +131,15 @@ class MessageHandler:
         else:
             send_message(room, 'Can\'t start the game right now')
 
+    @cmd('(?i)call me (\w+)', tag=True)
+    def nickname(self, nickname, room, sender):
+        if room in self.games:
+            for player in self.games[room].players:
+                if player.id == sender:
+                    player.nickname = nickname
+
     # chat commands
-    @cmd('(?i)smack ([\w ]*)')
+    @cmd('(?i)smack (.+)')
     def smack(self, target, room, **kwargs):
         data = {'roomId': room}
         people = list_memberships(data=data)
@@ -154,22 +156,44 @@ class MessageHandler:
     # In-game commands
     @cmd('(?i)play (\w+)', turn=True)
     def action(self, card, game, **kwargs):
-        card = game.select_card(card)
+        card = game.identify_card(card)
         if card is not None:
             game.play(card)
 
     @cmd('(?i)buy (\w+)', turn=True)
     def buy(self, card, game, **kwargs):
-        card = game.select_card(card)
+        card = game.identify_card(card)
         if card is not None:
             game.buy(card)
 
-    @cmd('(?i)(\w+)', waiting_turn=True)
-    def select(self, card, game, **kwargs):
-        card = game.select_card(card)
-        if card is not None:
-            game.select(card)
+    @cmd('(?i)(\w+)')
+    def select(self, card, game, sender, **kwargs):
+        # private (or at least not in game) message
+        if game is None:
+            # should probably sort these by time at some point
+            for game in self.games.values():
+                for player_id, function in game.waiting_private:
+                    if sender == player_id:
+                        break
+                else:
+                    continue
+                break
+            else:
+                return
+            card = game.identify_card(card)
+            if function(card):
+                game.waiting_private.remove([player_id, function])
+        # in a game
+        else:
+            for player_id, function in game.waiting_public:
+                if sender == player_id:
+                    break
+            else:
+                return
+            card = game.identify_card(card)
+            if function(card):
+                game.waiting_public.remove([player_id, function])
 
-    @cmd('(?i)done (\w+)', turn=True)
+    @cmd('(?i)pass (\w+)', turn=True)
     def done(self, game, **kwargs):
         game.done()
