@@ -99,11 +99,11 @@ class MessageHandler:
 
     @cmd('(?i)help', tag=True)
     def send_help(self, room, **kwargs):
-        send_message(room, self.help_text, markdown=True)
+        send_message(room, self.help_text, markdown=True, **kwargs)
 
     # Setup commands
     @cmd('(?i)new(?: as )?(\w+)?', tag=True)
-    def create_game(self, nickname, room, sender):
+    def create_game(self, nickname, room, sender, **kwargs):
         if room in self.games:
             send_message(room, 'Game already in {}'.format(self.games[room].state))
         else:
@@ -111,7 +111,7 @@ class MessageHandler:
             self.games[room].add_player(sender, nickname)
 
     @cmd('(?i)join(?: as )?(\w+)?', tag=True)
-    def join_game(self, nickname, room, sender):
+    def join_game(self, nickname, room, sender, **kwargs):
         if room not in self.games:
             send_message(room, 'No games are active in this room')
         elif self.games[room].state == 'setup':
@@ -120,7 +120,7 @@ class MessageHandler:
             send_message(room, 'Can\'t join the game right now')
 
     @cmd('(?i)start', tag=True)
-    def start_game(self, room, sender):
+    def start_game(self, room, sender, **kwargs):
         if room not in self.games:
             send_message(room, 'No games are active in this room')
         elif self.games[room].state == 'setup':
@@ -133,7 +133,7 @@ class MessageHandler:
             send_message(room, 'Can\'t start the game right now')
 
     @cmd('(?i)call me (\w+)', tag=True)
-    def nickname(self, nickname, room, sender):
+    def nickname(self, nickname, room, sender, **kwargs):
         if room in self.games:
             for player in self.games[room].players:
                 if player.id == sender:
