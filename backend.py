@@ -100,7 +100,7 @@ class MessageHandler:
 
     @cmd('(?i)help', tag=True)
     def send_help(self, room, **kwargs):
-        send_message(room, self.help_text, markdown=True, **kwargs)
+        send_message(room, self.help_text, markdown=True)
 
     # Setup commands
     @cmd('(?i)new(?: as )?(\w+)?', tag=True)
@@ -110,6 +110,7 @@ class MessageHandler:
         else:
             self.games[room] = Dominion(admin=sender, room=room)
             self.games[room].add_player(sender, nickname)
+            send_message(room, 'Created game, waiting for more people to join')
 
     @cmd('(?i)join(?: as )?(\w+)?', tag=True)
     def join_game(self, nickname, room, sender, **kwargs):
@@ -117,6 +118,9 @@ class MessageHandler:
             send_message(room, 'No games are active in this room')
         elif self.games[room].state == 'setup':
             self.games[room].add_player(sender, nickname)
+            send_message('Added new player to game. Players are {}'.format(
+                self.games[room].players
+            ))
         else:
             send_message(room, 'Can\'t join the game right now')
 

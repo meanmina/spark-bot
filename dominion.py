@@ -94,7 +94,7 @@ class Player:
 
     @property
     def hand_as_message(self):
-        return 'Bugger all'
+        return ', '.join(self.hand)
 
     @property
     def protected(self):
@@ -108,7 +108,7 @@ class Dominion:
     def __init__(self, admin, room):
         ''' create new game '''
         self.room = room
-        self.admin_id = admin
+        self.admin = admin
         self.players = []
         self.board = {}
         self.empty_stacks = set()

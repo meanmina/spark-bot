@@ -1,3 +1,4 @@
+from bot_helpers import send_message
 
 
 # Parent card classes
@@ -101,6 +102,19 @@ class Malitia(Action):
         while attacked_player != game.turn:
             if attacked_player.protected:
                 continue
+            num_to_discard = len(attacked_player.hand) - 3
+            if num_to_discard <= 0:
+                continue
+            send_message(
+                attacked_player.id,
+                'You have been attacked by a malitia! Currently you have {} but '
+                'you must discard {} card(s) to get down to three. Discard publicly by '
+                'typing the name of a card in the group room'.format(
+                    attacked_player.hand,
+                    num_to_discard,
+                ),
+                direct=True
+            )
             game.waiting_public.append([
                 attacked_player.id,
                 attacked_player.discard
