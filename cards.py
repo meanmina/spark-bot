@@ -35,7 +35,7 @@ class Action(Card):
         player.actions += self.actions
         player.buys += self.buys
         player.action_treasure += self.treasure
-        for _ in self.cards:
+        for _ in range(self.cards):
             player.draw_card()
 
 

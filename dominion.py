@@ -64,7 +64,7 @@ class Player:
         for owned_card in self.hand:
             if isinstance(owned_card, card):
                 return [True, owned_card]
-        return [False, 'You Don\'t have a {}'.format(card)]
+        return [False, 'You Don\'t have a {}'.format(card.name)]
 
     def end_turn(self):
         while self.in_play:
