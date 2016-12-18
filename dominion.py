@@ -94,7 +94,22 @@ class Player:
 
     @property
     def hand_as_message(self):
-        return ', '.join(self.hand)
+        actions = [card.name for card in self.hand if isinstance(card, Action)]
+        treasures = [card.name for card in self.hand if isinstance(card, Treasure)]
+        victories = [card.name for card in self.hand if isinstance(card, Treasure)]
+        message = ''
+        if actions:
+            message += '**Actions**: {}\n'.format(', '.join(actions))
+        if treasures:
+            message += '**Treasures**: {}\n'.format(', '.join(treasures))
+        if victories:
+            message += '**Victories**: {}\n'.format(', '.join(victories))
+        message += '**actions** {} - **treasure** {} - **buys** {}'.format(
+            self.actions,
+            self.treasure,
+            self.buys,
+        )
+        return message
 
     @property
     def protected(self):
@@ -147,12 +162,12 @@ class Dominion:
 
     def next_turn(self):
         if len(self.empty_stacks) >= 3 or self.board[Province] == 0:
-            # Do end game stuff here
+            # TODO end game stuff here
             return
         self.turn.end_turn()
         self.turn = next(self.turn_order)
-        send_message(self.room, '{} it\'s your turn, you have:'.format(self.turn.id))
-        send_message(self.room, '{}'.format(self.turn.hand_as_message))
+        send_message(self.room, '{} it\'s your turn, you have:'.format(self.turn))
+        send_message(self.room, self.turn.hand_as_message, markdown=True)
 
     def make_board(self, num_players):
         # Add base cards
