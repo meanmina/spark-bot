@@ -27,6 +27,7 @@ class Player:
         self.in_play = []
         self.deck = copy(STARTING_CARDS)
         shuffle(self.deck)
+        self.new_hand()
 
     def __repr__(self):
         return self.nickname
@@ -163,7 +164,6 @@ class Dominion:
         if len(self.empty_stacks) >= 3 or self.board[Province] == 0:
             # TODO end game stuff here
             return
-        self.turn.end_turn()
         self.turn = next(self.turn_order)
         send_message(self.room, '{} it\'s your turn, you have:'.format(self.turn))
         send_message(self.room, self.turn.hand_as_message, markdown=True)
@@ -219,8 +219,10 @@ class Dominion:
         self.turn.spent += card.cost
         self.turn.buys -= 1
         if self.turn.buys == 0:
+            self.turn.end_turn()
             self.next_turn()
 
     def done(self):
         ''' player is done with their turn '''
+        self.turn.end_turn()
         self.next_turn()
