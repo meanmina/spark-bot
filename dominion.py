@@ -133,6 +133,7 @@ class Dominion:
         self.turn_order = cycle(self.players)
         self.turn = next(self.turn_order)
         self.make_board(len(self.players))
+        self.next_turn()
 
     def take_card(self, card):
         cards_left = self.board[card]
@@ -202,7 +203,7 @@ class Dominion:
             send_message(self.room, 'Sorry, there are none left')
             return
         self.turn.spent += card.cost
-        self.buys -= 1
+        self.turn.buys -= 1
         if self.turn.buys == 0:
             self.next_turn()
 

@@ -118,7 +118,7 @@ class MessageHandler:
             send_message(room, 'No games are active in this room')
         elif self.games[room].state == 'setup':
             self.games[room].add_player(sender, nickname)
-            send_message('Added new player to game. Players are {}'.format(
+            send_message(room, 'Added new player to game. Players are {}'.format(
                 self.games[room].players
             ))
         else:
