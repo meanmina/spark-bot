@@ -43,7 +43,8 @@ class MessageHandler:
         '(must use mentions)\n'
         '5. show order --> Show what has been ordered so far\n'
         '6. clear order --> Clear all current orders\n'
-        '7. help --> Display this message'
+        '7. show money --> See who owes what\n'
+        '8. help --> Display this message'
     )
 
     orders_text = (
