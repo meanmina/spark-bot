@@ -52,7 +52,7 @@ class MessageHandler:
         '###Menu\n'
         '1. **meal** --> t=tower, f=fillet, p=popcorn REQUIRED\n'
         '2. -s --> spicy flag, include if you want a spicy burger (ignored if meal is \'p\')\n'
-        '3. -d=**drink** --> can of choice\n'
+        '3. -d=**drink** --> can of choice, no spaces allowed\n'
         '4. -no_wings --> no wings for this order (default is to have wings)\n'
         '5. -no_overwrite --> adds additional orders if this person already has one\n'
     )
@@ -103,11 +103,11 @@ class MessageHandler:
     def odering_info(self, **kwargs):
         self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
-    @cmd('(?i)cluck for (\w+) (\w+)([ -=\w]*)')
+    @cmd('(?i)cluck for (\w+) (\w)(?:$| )([ -=\w]*)')
     def order_other(self, *args, **kwargs):
         self.order(*args, **kwargs)
 
-    @cmd('(?i)cluck (\w+)([ -=\w]*)')
+    @cmd('(?i)cluck (\w)(?:$| )([ -=\w]*)')
     def order_self(self, *args, sender=None, **kwargs):
         self.order(sender, *args, **kwargs)
 
@@ -177,15 +177,28 @@ class MessageHandler:
         for person, payment in self.payments:
             money[person] += payment
 
+        credit = [
+            '{} is owed £{:0.2f}'.format(
+                get_person_info(person).get('displayName'),
+                amount,
+            )
+            for person, amount in money.items()
+            if amount > 0
+        ]
+        debt = [
+            '{} owes £{:0.2f}'.format(
+                get_person_info(person).get('displayName'),
+                abs(amount),
+            )
+            for person, amount in money.items()
+            if amount < 0
+        ]
+
         self.send_message(
             room,
-            '\n\n'.join(
-                '{} {} £{:0.2f}'.format(
-                    get_person_info(person).get('displayName'),
-                    'owes' if amount < 0 else 'is owed',
-                    abs(amount),
-                )
-                for person, amount in money.items()
+            '### Credit\n{}\n### Debt\n{}'.format(
+                '\n\n'.join(credit),
+                '\n\n'.join(debt),
             )
         )
 
