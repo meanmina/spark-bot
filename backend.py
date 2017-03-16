@@ -35,7 +35,7 @@ class MessageHandler:
 
     help_text = (
         '###Help\n'
-        '1. cluck [options] --> Order chicken\n'
+        '1. cluck **meal** [options] --> Order chicken\n'
         '2. bukaa --> See the list of order options\n'
         '3. paid **X** for chicken --> Indicate that you '
         'paid money in RFC\n'
@@ -49,7 +49,7 @@ class MessageHandler:
 
     orders_text = (
         '###Menu\n'
-        '1. -m=**meal** --> t=tower, f=fillet, p=popcorn\n'
+        '1. **meal** --> **required** t=tower, f=fillet, p=popcorn\n'
         '2. -s --> spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
         '3. -d=**drink** --> can of choice\n'
         '4. -no_wings --> no wings for this order (default is to have wings)\n'
@@ -102,7 +102,7 @@ class MessageHandler:
     def odering_info(self, **kwargs):
         self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
-    @cmd('(?i)cluck -m=(\w+)([ -=\w]*)')
+    @cmd('(?i)cluck (\w+)([ -=\w]*)')
     def order(self, meal, args, room, sender, **kwargs):
         ''' put an order in for chicken '''
         if meal not in MEALS:
@@ -165,7 +165,7 @@ class MessageHandler:
     @cmd('(?i)show money')
     def show_money(self, room, **kwargs):
         money = defaultdict(int)
-        for person, order in self.orders():
+        for person, order in self.orders:
             money[person] -= order['price']
 
         self.send_message(
@@ -186,7 +186,7 @@ class MessageHandler:
         all_meals = defaultdict(int)
         min_wings = 0
 
-        for _, order in self.orders():
+        for _, order in self.orders:
             if order['meal'] == 'popcorn':
                 all_meals[order['meal']] += 1
             else:
