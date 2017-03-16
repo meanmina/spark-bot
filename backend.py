@@ -36,12 +36,12 @@ class MessageHandler:
     help_text = (
         '###Help\n'
         '1. cluck **meal** [options] --> Order chicken\n'
-        '2. cluck for **person** **meal** [options] --> Order for someone else\n'
+        '2. cluck for **person** **meal** [options] --> Order for someone else (use mentions)\n'
         '3. bukaa --> See the list of order options\n'
         '4. paid **X** for chicken --> Indicate that you '
         'paid money in RFC\n'
         '5. paid **X** to **person** --> Indicate you paid money to a person '
-        '(must use mentions)\n'
+        '(use mentions)\n'
         '6. show order --> Show what has been ordered so far\n'
         '7. clear order --> Clear all current orders\n'
         '8. money --> See who owes what\n'
@@ -50,8 +50,8 @@ class MessageHandler:
 
     orders_text = (
         '###Menu\n'
-        '1. **meal** --> **required** t=tower, f=fillet, p=popcorn\n'
-        '2. -s --> spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
+        '1. **meal** --> t=tower, f=fillet, p=popcorn REQUIRED\n'
+        '2. -s --> spicy flag, include if you want a spicy burger (ignored if meal is \'p\')\n'
         '3. -d=**drink** --> can of choice\n'
         '4. -no_wings --> no wings for this order (default is to have wings)\n'
         '5. -no_overwrite --> adds additional orders if this person already has one\n'
@@ -67,6 +67,7 @@ class MessageHandler:
         self.all_meals = defaultdict(int)
         self.min_wings = 0
         self.orders = []
+        self.payments = []
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
@@ -173,6 +174,9 @@ class MessageHandler:
         for person, order in self.orders:
             money[person] -= order['price']
 
+        for person, payment in self.payments:
+            money[person] += payment
+
         self.send_message(
             room,
             '\n\n'.join(
@@ -229,6 +233,38 @@ class MessageHandler:
     @cmd('(?i)clear order')
     def clear_order(self, **kwargs):
         self.orders = []
+
+    @cmd('(?i)paid ([\d\.]+) for chicken')
+    def paid_rfc(self, amount, room, sender, **kwargs):
+        try:
+            money = float(amount)
+        except ValueError:
+            self.send_message(room, '{} is not a valid amount of money'.format(
+                amount,
+            ))
+        else:
+            self.payments.append([
+                sender,
+                money
+            ])
+
+    @cmd('(?i)paid ([\d\.]+) to (\w+)')
+    def paid_person(self, amount, payee, room, sender, **kwargs):
+        try:
+            money = float(amount)
+        except ValueError:
+            self.send_message(room, '{} is not a valid amount of money'.format(
+                amount,
+            ))
+        else:
+            self.payments.append([
+                sender,
+                money
+            ])
+            self.payments.append([
+                payee,
+                -money
+            ])
 
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
