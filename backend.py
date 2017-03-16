@@ -37,9 +37,9 @@ class MessageHandler:
         '###Help\n'
         '1. cluck [options] --> Order chicken\n'
         '2. bukaa --> See the list of order options\n'
-        '3. paid <X> for chicken --> Indicate that you '
+        '3. paid **X** for chicken --> Indicate that you '
         'paid money in RFC\n'
-        '4. paid <X> to <person> --> Indicate you paid money to a person '
+        '4. paid **X** to **person** --> Indicate you paid money to a person '
         '(must use mentions)\n'
         '5. show order --> Show what has been ordered so far\n'
         '6. clear order --> Clear all current orders\n'
@@ -49,11 +49,11 @@ class MessageHandler:
 
     orders_text = (
         '###Menu\n'
-        '1. -m=<meal> --> t=tower, f=fillet, p=popcorn\n'
+        '1. -m=**meal** --> t=tower, f=fillet, p=popcorn\n'
         '2. -s --> spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
-        '3. -d=<drink> --> can of choice\n'
+        '3. -d=**drink** --> can of choice\n'
         '4. -no_wings --> no wings for this order (default is to have wings)\n'
-        '5. -for=<person> --> order on behalf of someone else with a mention\n'
+        '5. -for=**person** --> order on behalf of someone else with a mention\n'
         '6. -no_overwrite --> adds additional orders if this person already has one\n'
     )
 
@@ -153,7 +153,7 @@ class MessageHandler:
             kwargs.get('room'),
             u'{} ordered a {}{} meal with {} hot wings and a can of {}. '
             'That costs £{:0.2f}'.format(
-                person_info['displayName'],
+                person_info.get('displayName'),
                 '' if meal == 'p' else ('spicy ' if spicy else 'regular '),
                 meal_name,
                 3 if wings else 0,
@@ -165,14 +165,14 @@ class MessageHandler:
     @cmd('(?i)show money')
     def show_money(self, room, **kwargs):
         money = defaultdict(int)
-        for person, order in self.orders.items():
+        for person, order in self.orders():
             money[person] -= order['price']
 
         self.send_message(
             room,
             '\n\n'.join(
                 '{} {} £{:0.2f}'.format(
-                    get_person_info(person)['displayName'],
+                    get_person_info(person).get('displayName'),
                     'owes' if amount < 0 else 'is owed',
                     abs(amount),
                 )
@@ -186,7 +186,7 @@ class MessageHandler:
         all_meals = defaultdict(int)
         min_wings = 0
 
-        for order in self.orders.values():
+        for _, order in self.orders():
             if order['meal'] == 'popcorn':
                 all_meals[order['meal']] += 1
             else:
