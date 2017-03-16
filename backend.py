@@ -93,7 +93,6 @@ class MessageHandler:
 
     @cmd('(?i)cluck -m=(\w+)([ -=\w]*)')
     def order(self, meal, *args, **kwargs):
-        print(args)
         room = kwargs.get('room')
         if meal not in MEALS:
             self.send_message(room, 'I did not understand meal choice of {}'.format(meal))
@@ -104,7 +103,7 @@ class MessageHandler:
             key: None if not val else val[0]
             for key, *val in [
                 arg.split('=')
-                for arg in args
+                for arg in args.strip().split(' ')
             ]
         }
 
@@ -115,7 +114,7 @@ class MessageHandler:
 
         self.send_message(
             kwargs.get('room'),
-            'You ordered a {}{} with {} hot wings and a can of {}. That costs £{:0.2f}'.format(
+            'You ordered a {}{} meal with {} hot wings and a can of {}. That costs £{:0.2f}'.format(
                 '' if meal == 'p' else ('spicy ' if spicy else 'regular '),
                 meal_name,
                 3 if wings else 0,
