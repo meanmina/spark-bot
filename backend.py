@@ -92,7 +92,7 @@ class MessageHandler:
         self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
     @cmd('(?i)cluck -m=(\w+)([ -=\w]*)')
-    def order(self, meal, *args, **kwargs):
+    def order(self, meal, args, **kwargs):
         room = kwargs.get('room')
         if meal not in MEALS:
             self.send_message(room, 'I did not understand meal choice of {}'.format(meal))
