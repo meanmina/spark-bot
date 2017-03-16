@@ -50,4 +50,4 @@ class Server:
     @picture('/images/avatar')
     def sanders_pic(self):
         ''' picture to use for the bot avatar '''
-        return 'dominion.jpg'
+        return 'chicken.png'
