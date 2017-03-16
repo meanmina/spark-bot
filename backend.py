@@ -36,15 +36,16 @@ class MessageHandler:
     help_text = (
         '###Help\n'
         '1. cluck **meal** [options] --> Order chicken\n'
-        '2. bukaa --> See the list of order options\n'
-        '3. paid **X** for chicken --> Indicate that you '
+        '2. cluck for **person** **meal** [options] --> Order for someone else\n'
+        '3. bukaa --> See the list of order options\n'
+        '4. paid **X** for chicken --> Indicate that you '
         'paid money in RFC\n'
-        '4. paid **X** to **person** --> Indicate you paid money to a person '
+        '5. paid **X** to **person** --> Indicate you paid money to a person '
         '(must use mentions)\n'
-        '5. show order --> Show what has been ordered so far\n'
-        '6. clear order --> Clear all current orders\n'
-        '7. show money --> See who owes what\n'
-        '8. help --> Display this message'
+        '6. show order --> Show what has been ordered so far\n'
+        '7. clear order --> Clear all current orders\n'
+        '8. money --> See who owes what\n'
+        '9. help --> Display this message'
     )
 
     orders_text = (
@@ -53,8 +54,7 @@ class MessageHandler:
         '2. -s --> spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
         '3. -d=**drink** --> can of choice\n'
         '4. -no_wings --> no wings for this order (default is to have wings)\n'
-        '5. -for=**person** --> order on behalf of someone else with a mention\n'
-        '6. -no_overwrite --> adds additional orders if this person already has one\n'
+        '5. -no_overwrite --> adds additional orders if this person already has one\n'
     )
 
     def __init__(self, db_conn):
@@ -102,8 +102,15 @@ class MessageHandler:
     def odering_info(self, **kwargs):
         self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
+    @cmd('(?i)cluck for (\w+) (\w+)([ -=\w]*)')
+    def order_other(self, *args, **kwargs):
+        self.order(*args, **kwargs)
+
     @cmd('(?i)cluck (\w+)([ -=\w]*)')
-    def order(self, meal, args, room, sender, **kwargs):
+    def order_self(self, *args, sender=None, **kwargs):
+        self.order(sender, *args, **kwargs)
+
+    def order(self, orderer, meal, args, room, **kwargs):
         ''' put an order in for chicken '''
         if meal not in MEALS:
             self.send_message(room, 'I did not understand meal choice of {}'.format(meal))
@@ -131,8 +138,6 @@ class MessageHandler:
 
         drink = order_args.get('-d', 'pepsi')
 
-        orderer = order_args.get('-for', sender)
-
         if '-no_overwrite' not in order_args:
             self.orders = [order for order in self.orders if order[0] != orderer]
 
@@ -150,7 +155,7 @@ class MessageHandler:
         person_info = get_person_info(orderer)
 
         self.send_message(
-            kwargs.get('room'),
+            room,
             u'{} ordered a {}{} meal with {} hot wings and a can of {}. '
             'That costs £{:0.2f}'.format(
                 person_info.get('displayName'),
@@ -162,7 +167,7 @@ class MessageHandler:
             )
         )
 
-    @cmd('(?i)show money')
+    @cmd('(?i)money')
     def show_money(self, room, **kwargs):
         money = defaultdict(int)
         for person, order in self.orders:
