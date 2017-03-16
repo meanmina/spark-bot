@@ -28,19 +28,21 @@ class MessageHandler:
 
     help_text = (
         '###Help\n'
-        '1 cluck [options]            Order chicken\n'
-        '2 bukaa                      See the list of order options\n'
-        '3 paid <£X> for chicken      Indicate that you paid money in RFC\n'
-        '4 paid <£X> to <person>      Indicate you paid money to a person (must use mentions)\n'
-        '5 help                       Display this message'
+        '1. cluck [options]            Order chicken\n'
+        '2. bukaa                      See the list of order options\n'
+        '3. paid \\<£X\\> for chicken      Indicate that you '
+        'paid money in RFC\n'
+        '4. paid \\<£X\\> to <person>      Indicate you paid money to a person '
+        '(must use mentions)\n'
+        '5. help                       Display this message'
     )
 
     orders_text = (
         '###Menu\n'
-        '1 -m=<meal>       t=tower, f=fillet, p=popcorn\n'
-        '2 -s              spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
-        '3 -d=<drink>      can of choice\n'
-        '4 -no_wings       no wings for this order (default is to have wings)'
+        '1. -m=\\<meal\\>       t=tower, f=fillet, p=popcorn\n'
+        '2. -s              spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
+        '3. -d=\\<drink\\>      can of choice\n'
+        '4. -no_wings       no wings for this order (default is to have wings)'
     )
 
     def __init__(self, db_conn):
@@ -81,7 +83,7 @@ class MessageHandler:
 
     @cmd('(?i)bukaa')
     def odering_info(self, **kwargs):
-        self.send_message(kwargs.get('room'), self.help_text, markdown=True)
+        self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
     @cmd('(?i)cluck -m=(\w+)([ -=\w]*)')
     def order(self, meal, *args, **kwargs):
