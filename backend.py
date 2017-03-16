@@ -28,7 +28,19 @@ class MessageHandler:
 
     help_text = (
         '###Help\n'
-        'There is nothing to really help with'
+        '1 cluck [options]            Order chicken\n'
+        '2 bukaa                      See the list of order options\n'
+        '3 paid <£X> for chicken      Indicate that you paid money in RFC\n'
+        '4 paid <£X> to <person>      Indicate you paid money to a person (must use mentions)\n'
+        '5 help                       Display this message'
+    )
+
+    orders_text = (
+        '###Menu\n'
+        '1 -m=<meal>       t=tower, f=fillet, p=popcorn\n'
+        '2 -s              spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
+        '3 -d=<drink>      can of choice\n'
+        '4 -no_wings       no wings for this order (default is to have wings)'
     )
 
     def __init__(self, db_conn):
@@ -39,6 +51,7 @@ class MessageHandler:
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
+        print('Saw message - {}'.format(message))
         room = message.get('roomId')
         sender = message.get('personId')
         if sender == PERSON_ID:
@@ -54,11 +67,9 @@ class MessageHandler:
             # remove mentions of the bot and strip whitespace
             text = re.sub(PERSON_ID, '', text).strip()
         else:
-            print(message)
             text = message.get('text')
-            print(text)
 
-        print('Saw message - {}'.format(text))
+        print('message text - {}'.format(text))
         for func in cmd_list:
             func(self, text, room=room, sender=sender)
 
@@ -67,6 +78,17 @@ class MessageHandler:
     @cmd('(?i)help')
     def send_help(self, **kwargs):
         self.send_message(kwargs.get('room'), self.help_text, markdown=True)
+
+    @cmd('(?i)bukaa')
+    def odering_info(self, **kwargs):
+        self.send_message(kwargs.get('room'), self.help_text, markdown=True)
+
+    @cmd('(?i)cluck -m=(\w+)([ -=\w]*)')
+    def order(self, meal, *args, **kwargs):
+        self.send_message(
+            kwargs.get('room'),
+            'You ordered {} with args {}'.format(meal, args),
+        )
 
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}

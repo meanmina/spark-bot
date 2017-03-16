@@ -48,6 +48,6 @@ class Server:
             print(err)
 
     @picture('/images/avatar')
-    def letter_pic(self):
-        ''' picture to use for the dominion bot image '''
+    def sanders_pic(self):
+        ''' picture to use for the bot avatar '''
         return 'dominion.jpg'
