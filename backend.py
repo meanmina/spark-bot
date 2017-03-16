@@ -199,7 +199,8 @@ class MessageHandler:
             '### Credit\n{}\n### Debt\n{}'.format(
                 '\n\n'.join(credit),
                 '\n\n'.join(debt),
-            )
+            ),
+            markdown=True
         )
 
     @cmd('(?i)show order')
