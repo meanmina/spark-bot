@@ -9,6 +9,12 @@ from bot_helpers import MENTION_REGEX, PERSON_ID, create_message
 
 cmd_list = []
 
+MEALS = {
+    't': ['tower', 4.0],
+    'f': ['fillet', 3.5],
+    'p': ['popcorn', 4.0],
+}
+
 
 def cmd(regex):
     def cmd_decorator(fn):
@@ -28,21 +34,21 @@ class MessageHandler:
 
     help_text = (
         '###Help\n'
-        '1. cluck [options]            Order chicken\n'
-        '2. bukaa                      See the list of order options\n'
-        '3. paid \\<£X\\> for chicken      Indicate that you '
+        '1. cluck [options] --> Order chicken\n'
+        '2. bukaa --> See the list of order options\n'
+        '3. paid <X> for chicken --> Indicate that you '
         'paid money in RFC\n'
-        '4. paid \\<£X\\> to <person>      Indicate you paid money to a person '
+        '4. paid <X> to <person> --> Indicate you paid money to a person '
         '(must use mentions)\n'
-        '5. help                       Display this message'
+        '5. help --> Display this message'
     )
 
     orders_text = (
         '###Menu\n'
-        '1. -m=\\<meal\\>       t=tower, f=fillet, p=popcorn\n'
-        '2. -s              spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
-        '3. -d=\\<drink\\>      can of choice\n'
-        '4. -no_wings       no wings for this order (default is to have wings)'
+        '1. -m=<meal> --> t=tower, f=fillet, p=popcorn\n'
+        '2. -s --> spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
+        '3. -d=<drink> --> can of choice\n'
+        '4. -no_wings --> no wings for this order (default is to have wings)'
     )
 
     def __init__(self, db_conn):
@@ -85,11 +91,36 @@ class MessageHandler:
     def odering_info(self, **kwargs):
         self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
-    @cmd('(?i)cluck -m=(\w+)([ -=\w]*)')
+    @cmd('(?i)cluck -m=(\w+)([ -=\w_]*)')
     def order(self, meal, *args, **kwargs):
+        room = kwargs.get('room')
+        if meal not in MEALS:
+            self.send_message(room, 'I did not understand meal choice of {}'.format(meal))
+        else:
+            meal_name, price = MEALS[meal]
+
+        order_args = {
+            key: None if not val else val[0]
+            for key, *val in [
+                arg.split('=')
+                for arg in args
+            ]
+        }
+
+        spicy = '-s' in order_args
+        wings = '-no_wings' not in order_args
+
+        drink = order_args.get('-d', 'pepsi')
+
         self.send_message(
             kwargs.get('room'),
-            'You ordered {} with args {}'.format(meal, args),
+            'You ordered a {}{} with {} hot wings and a can of {}. That costs £{:0.2f}'.format(
+                '' if meal == 'p' else ('spicy ' if spicy else 'regular '),
+                meal_name,
+                3 if wings else 0,
+                drink,
+                price
+            )
         )
 
     def send_message(self, room, text, markdown=False):
