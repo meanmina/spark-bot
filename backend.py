@@ -37,27 +37,26 @@ class MessageHandler:
 
     help_text = (
         '###Help\n'
-        '1. cluck **meal** [options] --> Order chicken\n'
-        '2. cluck for **person** **meal** [options] --> Order for someone else (use mentions)\n'
-        '3. bukaa --> See the list of order options\n'
-        '4. I paid **X** for chicken --> Indicate that you '
-        'paid money in RFC\n'
-        '5. **person**/**I** paid **person**/**me** **X** --> general payment from a to b\n\n'
-        '6. show order --> Show what has been ordered so far\n'
-        '7. place order --> Confirms current order and applies charges\n'
-        '8. clear order --> Clears current order, nobody is charged\n'
-        '9. money --> See who owes what\n'
-        '10. help --> Display this message'
+        '+ cluck **meal** [options] --> Order chicken\n'
+        '+ cluck for **person** **meal** [options] --> Order for someone else (use mentions)\n'
+        '+ bukaa --> See the list of order options\n'
+        '+ I paid **X** for chicken --> Indicate that you paid money in RFC\n'
+        '+ **person**/**I** paid **person**/**me** **X** --> general payment from a to b\n'
+        '+ show order --> Show what has been ordered so far\n'
+        '+ place order --> Confirms current order and applies charges\n'
+        '+ clear order --> Clears current order, nobody is charged\n'
+        '+ money --> See who owes what\n'
+        '+ help --> Display this message'
     )
 
     orders_text = (
         '###Menu\n'
-        '1. **meal** --> t=tower, f=fillet, p=popcorn REQUIRED\n'
-        '2. -s --> spicy flag, include if you want a spicy burger (ignored if meal is \'p\')\n'
-        '3. -d=**drink** --> can of choice, no spaces allowed\n'
-        '4. -no_wings --> no wings for this order (default is to have wings)\n'
-        '5. -no_overwrite --> adds additional orders if this person already has one\n'
-        '6. -note --> anything after this will be added as a comment on the order\n'
+        '+ **meal** --> t=tower, f=fillet, p=popcorn REQUIRED\n'
+        '+ -s --> spicy flag, include if you want a spicy burger (ignored if meal is \'p\')\n'
+        '+ -d=**drink** --> can of choice, no spaces allowed\n'
+        '+ -no_wings --> no wings for this order (default is to have wings)\n'
+        '+ -no_overwrite --> adds additional orders if this person already has one\n'
+        '+ -note --> anything after this will be added as a comment on the order\n'
     )
 
     def __init__(self, db_conn):
