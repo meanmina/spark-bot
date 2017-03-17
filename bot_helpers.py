@@ -49,3 +49,12 @@ def list_messages(room_id, limit=None):
         headers=ADMIN_HEADERS,
     )
     return json.loads(r.text)
+
+
+def list_memberships(room_id):
+    r = requests.get(
+        API_TEMPLATE.format('memberships'),
+        params={'roomId': room_id},
+        headers=ADMIN_HEADERS,
+    )
+    return json.loads(r.text)
