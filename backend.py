@@ -308,7 +308,7 @@ class MessageHandler:
 
                 # load money back into default dict
                 for person, amount in state.get('money', {}).items():
-                    self.money['person'] = amount
+                    self.money[person] = amount
                 break
         else:
             print('No state found - carrying on regardless')
