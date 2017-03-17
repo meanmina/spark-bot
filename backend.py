@@ -249,6 +249,7 @@ class MessageHandler:
     def clear_order(self, **kwargs):
         self.orders = []
         self.save_state()
+        self.send_message(kwargs.get('room'), 'done')
 
     @cmd('(?i)paid ([\d\.]+) for chicken')
     def paid_rfc(self, amount, room, sender, **kwargs):
@@ -261,6 +262,7 @@ class MessageHandler:
         else:
             self.money[sender] += money
         self.save_state()
+        self.send_message(room, 'done')
 
     @cmd('(?i)paid ([\d\.]+) to (\w+)')
     def paid_person(self, amount, payee, room, sender, **kwargs):
@@ -274,6 +276,7 @@ class MessageHandler:
             self.money[sender] += money
             self.money[payee] -= money
         self.save_state()
+        self.send_message(room, 'done')
 
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
