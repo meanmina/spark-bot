@@ -231,7 +231,10 @@ class MessageHandler:
             all_drinks[order['drink']] += 1
             min_wings += order['wings']
             if order['notes']:
-                comments.append('{} requested "{}"'.format(person, order['notes'][0]))
+                comments.append('{} requested "{}"'.format(
+                    get_person_info(person).get('displayName'),
+                    order['notes'][0])
+                )
 
         tens = max((min_wings - 3) // 10, 0)
         rest = min_wings - (tens * 10)  # may be negative
