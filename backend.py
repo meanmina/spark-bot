@@ -303,7 +303,7 @@ class MessageHandler:
         self.send_message(self.admin_room, 'state={}'.format(state))
 
     def load_state(self):
-        messages = list_messages(self.admin_room, limit=100)
+        messages = list_messages(self.admin_room, limit=100)['items']
         for message in messages:
             text = message.get('text', '')
             if text[:6] == 'state=':
