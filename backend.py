@@ -301,10 +301,10 @@ class MessageHandler:
             text = message.get('text', '')
             if text[:6] == 'state=':
                 state = json.loads(text[6:])
-                self.orders = state['orders']
+                self.orders = state.get('orders', [])
 
                 # load money back into default dict
-                for person, amount in state['money'].items():
+                for person, amount in state.get('money', {}).items():
                     self.money['person'] = amount
                 break
         else:
