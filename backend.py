@@ -106,7 +106,7 @@ class MessageHandler:
         ''' pretend to be ordering from someone else - patch the arguments to the cmd decorator '''
         text = 'cluck {} {}'.format(meal, args)
         # alter the sender and pass the command through
-        self.order(text, {'room': room, 'sender': person})
+        self.order(text, **{'room': room, 'sender': person})
 
     @cmd('(?i)cluck (\w)(?:$| )([ -=\w]*)')
     def order(self, meal, args, room, sender, **kwargs):
