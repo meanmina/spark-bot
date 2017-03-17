@@ -42,7 +42,7 @@ class MessageHandler:
         '3. bukaa --> See the list of order options\n'
         '4. I paid **X** for chicken --> Indicate that you '
         'paid money in RFC\n'
-        '5. **person**/**I** paid **person**/**me** **N** --> general payment from x to y\n\n'
+        '5. **person**/**I** paid **person**/**me** **X** --> general payment from a to b\n\n'
         '6. show order --> Show what has been ordered so far\n'
         '7. place order --> Confirms current order and applies charges\n'
         '8. clear order --> Clears current order, nobody is charged\n'
