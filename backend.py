@@ -6,7 +6,8 @@ import re
 import os
 import json
 from collections import defaultdict
-from bot_helpers import MENTION_REGEX, PERSON_ID, create_message, get_person_info, list_messages
+from bot_helpers import (MENTION_REGEX, PERSON_ID, create_message, get_person_info, list_messages,
+                         list_memberships)
 
 
 cmd_list = []
@@ -39,10 +40,9 @@ class MessageHandler:
         '1. cluck **meal** [options] --> Order chicken\n'
         '2. cluck for **person** **meal** [options] --> Order for someone else (use mentions)\n'
         '3. bukaa --> See the list of order options\n'
-        '4. paid **X** for chicken --> Indicate that you '
+        '4. I paid **X** for chicken --> Indicate that you '
         'paid money in RFC\n'
-        '5. paid **X** to **person** --> Indicate you paid money to a person '
-        '(use mentions)\n'
+        '5. **person**/**I** paid **person**/**me** **N** --> general payment from x to y\n\n'
         '6. show order --> Show what has been ordered so far\n'
         '7. place order --> Confirms current order and applies charges\n'
         '8. clear order --> Clears current order, nobody is charged\n'
@@ -104,6 +104,10 @@ class MessageHandler:
     @cmd('(?i)cluck for (\w+) (\w)(?:$| )([ -=\w]*)')
     def order_other(self, person, meal, args, room, **kwargs):
         ''' pretend to be ordering from someone else - patch the arguments to the cmd decorator '''
+        valid_people = set(member['personId'] for member in list_memberships(room)['items'])
+        if person not in valid_people:
+            self.send_message(room, '{} is not a valid input'.format(person))
+            return
         text = 'cluck {} {}'.format(meal, args)
         # alter the sender and pass the command through
         self.order(text, **{'room': room, 'sender': person})
@@ -260,7 +264,7 @@ class MessageHandler:
         self.save_state()
         self.send_message(kwargs.get('room'), 'done')
 
-    @cmd('(?i)paid ([\d\.]+) for chicken')
+    @cmd('(?i)i paid ([\d\.]+) for chicken')
     def paid_rfc(self, amount, room, sender, **kwargs):
         try:
             money = float(amount)
@@ -273,8 +277,21 @@ class MessageHandler:
         self.save_state()
         self.send_message(room, 'done')
 
-    @cmd('(?i)paid ([\d\.]+) to (\w+)')
-    def paid_person(self, amount, payee, room, sender, **kwargs):
+    @cmd('(?i)(\w+) paid (\w+) ([\d\.]+)')
+    def paid_person(self, payer, payee, amount, room, sender):
+        if payer.lower() == 'i':
+            payer = sender
+        if payee.lower() == 'me':
+            payee = sender
+
+        valid_people = set(member['personId'] for member in list_memberships(room)['items'])
+        if payer not in valid_people:
+            self.send_message(room, '{} is not a valid input'.format(payer))
+            return
+        if payee not in valid_people:
+            self.send_message(room, '{} is not a valid input'.format(payee))
+            return
+
         try:
             money = float(amount)
         except ValueError:
