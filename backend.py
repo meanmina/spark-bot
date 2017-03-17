@@ -57,6 +57,7 @@ class MessageHandler:
         '3. -d=**drink** --> can of choice, no spaces allowed\n'
         '4. -no_wings --> no wings for this order (default is to have wings)\n'
         '5. -no_overwrite --> adds additional orders if this person already has one\n'
+        '6. -note --> anything after this will be added as a comment on the order\n'
     )
 
     def __init__(self, db_conn):
@@ -121,6 +122,7 @@ class MessageHandler:
         else:
             meal_name, price = MEALS[meal]
 
+        args, *comment = args.split('-note ')
         order_args = {
             key: None if not val else val[0]
             for key, *val in [
@@ -151,6 +153,7 @@ class MessageHandler:
                 'spicy': spicy,
                 'wings': wings,
                 'drink': drink,
+                'notes': comment,
                 'price': price,
             }
         ])
@@ -159,13 +162,14 @@ class MessageHandler:
 
         self.send_message(
             room,
-            u'{} ordered a {}{} meal with {} hot wings and a can of {}. '
+            u'{} ordered a {}{} meal with {} hot wings and a can of {}{}. '
             'That costs £{:0.2f}'.format(
                 person_info.get('displayName'),
                 '' if meal == 'p' else ('spicy ' if spicy else 'regular '),
                 meal_name,
                 3 if wings else 0,
                 drink,
+                '' if not comment else ' ({})'.format(comment[0]),
                 price
             )
         )
@@ -212,8 +216,9 @@ class MessageHandler:
         all_meals = defaultdict(int)
         min_wings = 0
         all_wings = 0
+        comments = []
 
-        for _, order in self.orders:
+        for person, order in self.orders:
             if order['meal'] == 'popcorn':
                 all_meals[order['meal']] += 1
             else:
@@ -225,6 +230,8 @@ class MessageHandler:
                 ] += 1
             all_drinks[order['drink']] += 1
             min_wings += order['wings']
+            if order['notes']:
+                comments.append('{} requested "{}"'.format(person, order['notes'][0]))
 
         tens = max((min_wings - 3) // 10, 0)
         rest = min_wings - (tens * 10)  # may be negative
@@ -240,10 +247,11 @@ class MessageHandler:
             '###Wings\n'
             '{}\n\n'
             '###Drinks\n'
-            '{}'.format(
+            '{}{}'.format(
                 dict(all_meals),
                 all_wings,
-                dict(all_drinks)
+                dict(all_drinks),
+                '' if not comments else '\n\n###Notes\n{}'.format('\n\n'.join(comments)),
             ),
             markdown=True
         )
