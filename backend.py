@@ -44,9 +44,10 @@ class MessageHandler:
         '5. paid **X** to **person** --> Indicate you paid money to a person '
         '(use mentions)\n'
         '6. show order --> Show what has been ordered so far\n'
-        '7. clear order --> Clear all current orders\n'
-        '8. money --> See who owes what\n'
-        '9. help --> Display this message'
+        '7. place order --> Confirms current order and applies charges\n'
+        '8. clear order --> Clears current order, nobody is charged\n'
+        '9. money --> See who owes what\n'
+        '10. help --> Display this message'
     )
 
     orders_text = (
@@ -92,8 +93,6 @@ class MessageHandler:
         for func in cmd_list:
             func(self, text, room=room, sender=sender)
 
-    # example of a command decorator
-    # use regex to match a message, groups with be passed in as *args
     @cmd('(?i)help')
     def send_help(self, **kwargs):
         self.send_message(kwargs.get('room'), self.help_text, markdown=True)
@@ -103,14 +102,14 @@ class MessageHandler:
         self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
     @cmd('(?i)cluck for (\w+) (\w)(?:$| )([ -=\w]*)')
-    def order_other(self, *args, **kwargs):
-        self.order(*args, **kwargs)
+    def order_other(self, person, meal, args, room, **kwargs):
+        ''' pretend to be ordering from someone else - patch the arguments to the cmd decorator '''
+        text = 'cluck {} {}'.format(meal, args)
+        # alter the sender and pass the command through
+        self.order(text, {'room': room, 'sender': person})
 
     @cmd('(?i)cluck (\w)(?:$| )([ -=\w]*)')
-    def order_self(self, *args, sender=None, **kwargs):
-        self.order(sender, *args, **kwargs)
-
-    def order(self, orderer, meal, args, room, **kwargs):
+    def order(self, meal, args, room, sender, **kwargs):
         ''' put an order in for chicken '''
         if meal not in MEALS:
             self.send_message(room, 'I did not understand meal choice of {}'.format(meal))
@@ -139,10 +138,10 @@ class MessageHandler:
         drink = order_args.get('-d', 'pepsi')
 
         if '-no_overwrite' not in order_args:
-            self.orders = [order for order in self.orders if order[0] != orderer]
+            self.orders = [order for order in self.orders if order[0] != sender]
 
         self.orders.append([
-            orderer,
+            sender,
             {
                 'meal': meal_name,
                 'spicy': spicy,
@@ -152,7 +151,7 @@ class MessageHandler:
             }
         ])
 
-        person_info = get_person_info(orderer)
+        person_info = get_person_info(sender)
 
         self.send_message(
             room,
@@ -244,6 +243,16 @@ class MessageHandler:
             ),
             markdown=True
         )
+
+    @cmd('(?i)place order')
+    def place_order(self, **kwargs):
+        for person, order in self.orders:
+            self.money[person] -= order['price']
+        self.send_message(kwargs.get('room'), 'Placing the following order:\n\n')
+
+        # must be given matching regex to propagate command
+        self.show_order('show order', **kwargs)
+        self.clear_order('clear order', **kwargs)
 
     @cmd('(?i)clear order')
     def clear_order(self, **kwargs):
