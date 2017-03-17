@@ -307,7 +307,7 @@ class MessageHandler:
                 amount,
             ))
         else:
-            self.money[sender] += money
+            self.money[payer] += money
             self.money[payee] -= money
         self.save_state()
         self.send_message(room, 'done')
