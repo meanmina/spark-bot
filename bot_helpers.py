@@ -5,6 +5,7 @@ import os
 import requests
 import json
 
+API_TEMPLATE = 'https://api.ciscospark.com/v1/{}'
 MENTION_REGEX = r'<spark-mention.*?data-object-id="(\w+)".*?spark-mention>'
 PERSON_ID = os.environ['PERSON_ID']
 HEADERS = {"Authorization": "Bearer {}".format(os.environ['TOKEN'])}
@@ -15,7 +16,7 @@ ADMIN_HEADERS = {"Authorization": "Bearer {}".format(os.environ['ADMIN_TOKEN'])}
 
 def get_person_info(person_id):
     r = requests.get(
-        'https://api.ciscospark.com/v1/people/{}'.format(person_id),
+        API_TEMPLATE.format('people/' + person_id),
         headers=ADMIN_HEADERS
     )
     return json.loads(r.text)
@@ -23,7 +24,7 @@ def get_person_info(person_id):
 
 def get_message_info(message_id):
     r = requests.get(
-        'https://api.ciscospark.com/v1/messages/{}'.format(message_id),
+        API_TEMPLATE.format('messages/' + message_id),
         headers=ADMIN_HEADERS
     )
     return json.loads(r.text)
@@ -31,7 +32,20 @@ def get_message_info(message_id):
 
 def create_message(data):
     return requests.post(
-        'https://api.ciscospark.com/v1/messages',
+        API_TEMPLATE.format('messages'),
         data=data,
         headers=HEADERS
     )
+
+
+def list_messages(room_id, limit=None):
+    params = {'roomId': room_id}
+    if limit is not None:
+        params['max'] = limit
+
+    r = requests.get(
+        API_TEMPLATE.format('messages'),
+        params=params,
+        headers=ADMIN_HEADERS,
+    )
+    return json.loads(r.text)
