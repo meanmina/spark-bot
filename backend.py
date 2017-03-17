@@ -6,7 +6,7 @@ import re
 import os
 import json
 from collections import defaultdict
-from bot_helpers import MENTION_REGEX, PERSON_ID, create_message, get_person_info
+from bot_helpers import MENTION_REGEX, PERSON_ID, create_message, get_person_info, list_messages
 
 
 cmd_list = []
@@ -66,6 +66,7 @@ class MessageHandler:
 
         self.orders = []
         self.payments = []
+        self.load_state()
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
@@ -302,5 +303,13 @@ class MessageHandler:
         self.send_message(self.admin_room, 'state={}'.format(state))
 
     def load_state(self):
-        messages = list_messages(self.admin_room)
-
+        messages = list_messages(self.admin_room, limit=100)
+        for message in messages:
+            text = message.get('text', '')
+            if text[:6] == 'state=':
+                state = json.loads(text[6:])
+                self.orders = state['orders']
+                self.payments = state['payments']
+                break
+        else:
+            print('No state found - carrying on regardless')
