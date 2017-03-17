@@ -65,7 +65,7 @@ class MessageHandler:
         self.db_cur = db_conn.cursor()
 
         self.orders = []
-        self.payments = []
+        self.money = defaultdict(int)
         self.load_state()
 
     def parse_message(self, message):
@@ -174,8 +174,8 @@ class MessageHandler:
         for person, order in self.orders:
             money[person] -= order['price']
 
-        for person, payment in self.payments:
-            money[person] += payment
+        for person, amount in self.money.items():
+            money[person] += amount
 
         credit = [
             '{} is owed £{:0.2f}'.format(
@@ -208,6 +208,7 @@ class MessageHandler:
         all_drinks = defaultdict(int)
         all_meals = defaultdict(int)
         min_wings = 0
+        all_wings = 0
 
         for _, order in self.orders:
             if order['meal'] == 'popcorn':
@@ -258,10 +259,7 @@ class MessageHandler:
                 amount,
             ))
         else:
-            self.payments.append([
-                sender,
-                money
-            ])
+            self.money[sender] += money
         self.save_state()
 
     @cmd('(?i)paid ([\d\.]+) to (\w+)')
@@ -273,14 +271,8 @@ class MessageHandler:
                 amount,
             ))
         else:
-            self.payments.append([
-                sender,
-                money
-            ])
-            self.payments.append([
-                payee,
-                -money
-            ])
+            self.money[sender] += money
+            self.money[payee] -= money
         self.save_state()
 
     def send_message(self, room, text, markdown=False):
@@ -296,7 +288,8 @@ class MessageHandler:
         state = json.dumps(
             {
                 'orders': self.orders,
-                'payments': self.payments
+                # convert money to regular dict
+                'money': dict(self.money)
             },
             separators=(',', ':')
         )
@@ -309,7 +302,10 @@ class MessageHandler:
             if text[:6] == 'state=':
                 state = json.loads(text[6:])
                 self.orders = state['orders']
-                self.payments = state['payments']
+
+                # load money back into default dict
+                for person, amount in state['money'].items():
+                    self.money['person'] = amount
                 break
         else:
             print('No state found - carrying on regardless')
