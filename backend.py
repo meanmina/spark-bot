@@ -44,6 +44,7 @@ class MessageHandler:
         '+ **person**/**I** paid **person**/**me** **X** --> general payment from a to b\n'
         '+ show order --> Show what has been ordered so far\n'
         '+ place order --> Confirms current order and applies charges\n'
+        '+ cancel order --> Cancels your own order\n'
         '+ clear order --> Clears current order, nobody is charged\n'
         '+ money --> See who owes what\n'
         '+ help --> Display this message'
@@ -264,6 +265,12 @@ class MessageHandler:
             markdown=True
         )
 
+    @cmd('(?i)cancel order')
+    def cancel_order(self, room, sender):
+        self.orders = [order for order in self.orders if order[0] != sender]
+        self.save_state()
+        self.send_message(room, 'done')
+
     @cmd('(?i)place order')
     def place_order(self, **kwargs):
         for person, order in self.orders:
@@ -275,10 +282,10 @@ class MessageHandler:
         self.clear_order('clear order', **kwargs)
 
     @cmd('(?i)clear order')
-    def clear_order(self, **kwargs):
+    def clear_order(self, room, **kwargs):
         self.orders = []
         self.save_state()
-        self.send_message(kwargs.get('room'), 'done')
+        self.send_message(room, 'done')
 
     @cmd('(?i)i paid ([\d\.]+) for chicken')
     def paid_rfc(self, amount, room, sender, **kwargs):
