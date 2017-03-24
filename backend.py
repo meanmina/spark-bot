@@ -245,7 +245,7 @@ class MessageHandler:
 
         tens = max((min_wings - 3) // 10, 0)
         rest = min_wings - (tens * 10)  # may be negative
-        for threes in range(2):
+        for threes in range(3):
             if threes * 3 >= rest:
                 all_wings = (10 * tens) + (3 * threes)
                 break
