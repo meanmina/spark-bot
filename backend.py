@@ -45,6 +45,7 @@ class MessageHandler:
         '+ show order --> Show what has been ordered so far\n'
         '+ place order --> Confirms current order and applies charges\n'
         '+ cancel order --> Cancels your own order\n'
+        '+ cancel order for **person** --> Cancel someone elses order\n'
         '+ clear order --> Clears current order, nobody is charged\n'
         '+ money --> See who owes what\n'
         '+ help --> Display this message'
@@ -265,7 +266,17 @@ class MessageHandler:
             markdown=True
         )
 
-    @cmd('(?i)cancel order')
+    @cmd('(?i)cancel order for (\w+)')
+    def cancel_other(self, person, room, **kwargs):
+        valid_people = set(member['personId'] for member in list_memberships(room)['items'])
+        if person not in valid_people:
+            self.send_message(room, '{} is not a valid input'.format(person))
+            return
+        text = 'cancel order'
+        # alter the sender and pass the command through
+        self.cancel_order(text, **{'room': room, 'sender': person})
+
+    @cmd('(?i)cancel order(?! f)')
     def cancel_order(self, room, sender):
         self.orders = [order for order in self.orders if order[0] != sender]
         self.save_state()
