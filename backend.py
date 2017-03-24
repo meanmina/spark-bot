@@ -51,7 +51,7 @@ class MessageHandler:
 
     orders_text = (
         '###Menu\n'
-        '+ **meal** --> t=tower, f=fillet, p=popcorn REQUIRED\n'
+        '+ **meal** --> t=tower, f=fillet, p=popcorn, b=beef burger REQUIRED\n'
         '+ -s --> spicy flag, include if you want a spicy burger (ignored if meal is \'p\')\n'
         '+ -d=**drink** --> can of choice, no spaces allowed\n'
         '+ -no_wings --> no wings for this order (default is to have wings)\n'
@@ -115,6 +115,14 @@ class MessageHandler:
     @cmd('(?i)cluck (\w)(?:$| )([ -=\w]*)')
     def order(self, meal, args, room, sender, **kwargs):
         ''' put an order in for chicken '''
+        person_info = get_person_info(sender)
+        if meal == 'b':
+            self.send_message(room, 'Beef burgers (like all things) are inferior to chicken')
+            self.send_message(
+                room,
+                '{} has selected: famine'.format(person_info.get('displayName'))
+            )
+            return
         if meal not in MEALS:
             self.send_message(room, 'I did not understand meal choice of {}'.format(meal))
             return
@@ -156,8 +164,6 @@ class MessageHandler:
                 'price': price,
             }
         ])
-
-        person_info = get_person_info(sender)
 
         self.send_message(
             room,
