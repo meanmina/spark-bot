@@ -10,7 +10,7 @@ MENTION_REGEX = r'<spark-mention.*?data-object-id="(\w+)".*?spark-mention>'
 PERSON_ID = os.environ['PERSON_ID']
 HEADERS = {
     "Authorization": "Bearer {}".format(os.environ['TOKEN']),
-    "Content-Type": "application/json; charset=UTF-8"
+    "Content-Type": "application/json; charset=utf-8"
 }
 
 # To read messages other than those in which the bot is mentioned
@@ -36,11 +36,13 @@ def get_message_info(message_id):
 
 
 def create_message(data):
-    return requests.post(
+    r = requests.post(
         API_TEMPLATE.format('messages'),
         data=data,
         headers=HEADERS
     )
+    print(r)
+    return
 
 
 def list_messages(room_id, limit=None):
