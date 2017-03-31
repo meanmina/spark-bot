@@ -170,7 +170,7 @@ class MessageHandler:
         self.send_message(
             room,
             u'{} ordered a {}{} meal with {} hot wings and a can of {}{}. '
-            'That costs £{:0.2f}'.format(
+            'That costs \xa3{:0.2f}'.format(
                 person_info.get('displayName'),
                 '' if meal == 'p' else ('spicy ' if spicy else 'regular '),
                 meal_name,
@@ -192,7 +192,7 @@ class MessageHandler:
             money[person] += amount
 
         credit = [
-            '{} is owed £{:0.2f}'.format(
+            '{} is owed \xa3{:0.2f}'.format(
                 get_person_info(person).get('displayName'),
                 amount,
             )
@@ -200,7 +200,7 @@ class MessageHandler:
             if amount > 0
         ]
         debt = [
-            '{} owes £{:0.2f}'.format(
+            '{} owes \xa3{:0.2f}'.format(
                 get_person_info(person).get('displayName'),
                 abs(amount),
             )
