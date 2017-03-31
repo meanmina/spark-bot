@@ -252,15 +252,12 @@ class MessageHandler:
 
         self.send_message(
             kwargs.get('room'),
-            '###Meals\n'
             '{}\n\n'
-            '###Wings\n'
             '{}\n\n'
-            '###Drinks\n'
             '{}{}'.format(
-                ', '.join('{} - {}'.format(k, v) for k, v in dict(all_meals).items()),
-                all_wings,
-                ', '.join('{} - {}'.format(k, v) for k, v in dict(all_drinks).items()),
+                ', '.join('**{}** {}'.format(v, k) for k, v in dict(all_meals).items()),
+                '**{}** wings'.format(all_wings),
+                ', '.join('**{}** {}'.format(v, k) for k, v in dict(all_drinks).items()),
                 '' if not comments else '\n\n###Notes\n{}'.format('\n\n'.join(comments)),
             ),
             markdown=True
