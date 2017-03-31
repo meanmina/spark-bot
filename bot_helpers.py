@@ -38,8 +38,8 @@ def get_message_info(message_id):
 def create_message(data):
     r = requests.post(
         API_TEMPLATE.format('messages'),
-        data=data,
-        headers=HEADERS
+        json=data,
+        headers=HEADERS,
     )
     print(r.reason)
     return
