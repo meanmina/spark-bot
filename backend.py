@@ -258,9 +258,9 @@ class MessageHandler:
             '{}\n\n'
             '###Drinks\n'
             '{}{}'.format(
-                '\n\n'.join('{} - {}'.format(k, v) for k, v in dict(all_meals).items()),
+                ', '.join('{} - {}'.format(k, v) for k, v in dict(all_meals).items()),
                 all_wings,
-                '\n\n'.join('{} - {}'.format(k, v) for k, v in dict(all_drinks).items()),
+                ', '.join('{} - {}'.format(k, v) for k, v in dict(all_drinks).items()),
                 '' if not comments else '\n\n###Notes\n{}'.format('\n\n'.join(comments)),
             ),
             markdown=True
