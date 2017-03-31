@@ -341,9 +341,9 @@ class MessageHandler:
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
         if markdown:
-            data['markdown'] = text
+            data['markdown'] = text.encode('utf-8')
         else:
-            data['text'] = text
+            data['text'] = text.encode('utf-8')
         create_message(data=data)
 
     def save_state(self):
