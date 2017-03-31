@@ -8,10 +8,15 @@ import json
 API_TEMPLATE = 'https://api.ciscospark.com/v1/{}'
 MENTION_REGEX = r'<spark-mention.*?data-object-id="(\w+)".*?spark-mention>'
 PERSON_ID = os.environ['PERSON_ID']
-HEADERS = {"Authorization": "Bearer {}".format(os.environ['TOKEN'])}
+HEADERS = {
+    "Authorization": "Bearer {}".format(os.environ['TOKEN']),
+    "content-type": "application/json;charset=utf-8"
+}
 
 # To read messages other than those in which the bot is mentioned
-ADMIN_HEADERS = {"Authorization": "Bearer {}".format(os.environ['ADMIN_TOKEN'])}
+ADMIN_HEADERS = {
+    "Authorization": "Bearer {}".format(os.environ['ADMIN_TOKEN']),
+}
 
 
 def get_person_info(person_id):
