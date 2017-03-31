@@ -41,7 +41,7 @@ def create_message(data):
         data=data,
         headers=HEADERS
     )
-    print(r)
+    print(r.reason)
     return
 
 
