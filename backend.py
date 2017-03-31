@@ -243,7 +243,7 @@ class MessageHandler:
                     order['notes'][0])
                 )
 
-        tens = max((min_wings - 3) // 10, 0)
+        tens = max((min_wings + 3) // 10, 0)
         rest = min_wings - (tens * 10)  # may be negative
         for threes in range(3):
             if threes * 3 >= rest:
@@ -341,9 +341,9 @@ class MessageHandler:
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
         if markdown:
-            data['markdown'] = text.encode('utf-8')
+            data['markdown'] = text
         else:
-            data['text'] = text.encode('utf-8')
+            data['text'] = text
         create_message(data=data)
 
     def save_state(self):
