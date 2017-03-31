@@ -36,8 +36,6 @@ class MessageHandler:
         self.send_message(self.admin_room, 'Hello')
 
         self.db_cur = db_conn.cursor()
-        self.db_cur.execute("select * from information_schema.tables where table_name=usuals")
-        print('debug db cur - {}'.format(self.db_cur.rowcount))
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
