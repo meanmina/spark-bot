@@ -219,6 +219,12 @@ class MessageHandler:
 
     @cmd('(?i)show order')
     def show_order(self, **kwargs):
+        if not self.orders:
+            self.send_message(
+                kwargs.get('room'),
+                'No orders have been made'
+            )
+            return
         all_drinks = defaultdict(int)
         all_meals = defaultdict(int)
         min_wings = 0
@@ -240,6 +246,7 @@ class MessageHandler:
             if order['notes']:
                 comments.append('{} requested "{}"'.format(
                     get_person_info(person).get('displayName'),
+
                     order['notes'][0])
                 )
 
