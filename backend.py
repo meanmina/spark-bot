@@ -4,6 +4,7 @@
 '''
 import re
 import os
+from collections import defaultdict
 from bot_helpers import MENTION_REGEX, PERSON_ID, create_message
 
 
@@ -40,7 +41,9 @@ class MessageHandler:
         'paid money in RFC\n'
         '4. paid <X> to <person> --> Indicate you paid money to a person '
         '(must use mentions)\n'
-        '5. help --> Display this message'
+        '5. show order --> Show what has been ordered so far\n'
+        '6. clear order --> Clear all current orders\n'
+        '7. help --> Display this message'
     )
 
     orders_text = (
@@ -56,6 +59,18 @@ class MessageHandler:
         self.send_message(self.admin_room, 'Hello')
 
         self.db_cur = db_conn.cursor()
+
+        self.all_drinks = defaultdict(int)
+        self.all_meals = defaultdict(int)
+        self.min_wings = 0
+
+    @property
+    def all_wings(self):
+        tens = (self.min_wings - 3) // 10
+        rest = self.min_wings - (tens * 10)  # may be negative
+        for threes in range(2):
+            if threes * 3 >= rest:
+                return (10 * tens) + (3 * threes)
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
@@ -109,12 +124,20 @@ class MessageHandler:
 
         spicy = '-s' in order_args
         wings = '-no_wings' not in order_args
-
         drink = order_args.get('-d', 'pepsi')
+
+        if meal == 'p':
+            self.all_meals[meal_name] += 1
+        else:
+            self.all_meals['{} {}'.format('spicy' if spicy else 'regular', meal_name)] += 1
+        self.all_drinks[drink] += 1
+        self.min_wings += 3 if wings else 0
 
         self.send_message(
             kwargs.get('room'),
-            'You ordered a {}{} meal with {} hot wings and a can of {}. That costs £{:0.2f}'.format(
+            u'{} ordered a {}{} meal with {} hot wings and a can of {}. '
+            'That costs £{:0.2f}'.format(
+                kwargs.get('sender'),
                 '' if meal == 'p' else ('spicy ' if spicy else 'regular '),
                 meal_name,
                 3 if wings else 0,
@@ -122,6 +145,28 @@ class MessageHandler:
                 price
             )
         )
+
+    @cmd('(?i)show order')
+    def show_order(self, **kwargs):
+        self.send_message(
+            kwargs.get('room'),
+            '### meals\n'
+            '{}\n\n'
+            '### wings\n'
+            '{}\n\n'
+            '### drinks\n'
+            '{}'.format(
+                dict(self.all_meals),
+                self.all_wings,
+                dict(self.all_drinks)
+            ),
+        )
+
+    @cmd('(?i)clear order')
+    def clear_order(self, **kwargs):
+        self.all_drinks = defaultdict(int)
+        self.all_meals = defaultdict(int)
+        self.min_wings = 0
 
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
