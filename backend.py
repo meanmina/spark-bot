@@ -3,9 +3,8 @@
     Main backend where spark messages land and are parsed
 '''
 import re
-import os
 from random import choice
-from bot_helpers import MENTION_REGEX, PERSON_ID, create_message, list_memberships
+from bot_helpers import MENTION_REGEX, PERSON_ID, DEBUG_ROOM, send_message, list_memberships
 from dominion import Dominion
 
 
@@ -21,12 +20,28 @@ INSULTS = [
 # ]
 
 
-def cmd(regex, tag=False):
+def cmd(regex, tag=False, turn=False, waiting_turn=False):
     def cmd_decorator(fn):
         def inner(obj, text, **kwargs):
             if tag:
                 if PERSON_ID not in text:
                     return
+            room = kwargs.get('room')
+            sender = kwargs.get('sender')
+            if waiting_turn:
+                game = obj.waiting_turns.get(sender)
+                if game is None:
+                    return
+                kwargs['game'] = game
+            if turn:
+                game = obj.games.get(room)
+                if room is None:
+                    return
+                if game.state != 'progress':
+                    return
+                if sender != game.turn.id:
+                    return
+                kwargs['game'] = game
             text = re.sub(PERSON_ID, '', text).strip()
             match = re.match(regex, text)
             if not match:
@@ -58,6 +73,9 @@ class MessageHandler:
 
         self.db_cur = db_conn.cursor()
 
+        # people we are waiting for a 1:1 message from
+        self.waiting_turns = {}
+
     def parse_message(self, message):
         ''' parse a generic message from spark '''
         room = message.get('roomId')
@@ -79,29 +97,46 @@ class MessageHandler:
 
         print('Saw message - {}'.format(text))
         for func in cmd_list:
-            func(self, text, room=room, sender=sender)
+            try:
+                func(self, text, room=room, sender=sender)
+            except Exception as exc:
+                send_message(DEBUG_ROOM, exc)
 
-    def send_message(self, room, text, markdown=False):
-        data = {'roomId': room}
-        if markdown:
-            data['markdown'] = text
-        else:
-            data['text'] = text
-        create_message(data=data)
-
-    # example of a command decorator
-    # use regex to match a message, groups with be passed in as *args
     @cmd('(?i)help', tag=True)
     def send_help(self, room, **kwargs):
-        self.send_message(room, self.help_text, markdown=True)
+        send_message(room, self.help_text, markdown=True)
 
+    # Setup commands
     @cmd('(?i)new', tag=True)
-    def create_game(self, room, **kwargs):
+    def create_game(self, room, sender):
         if room in self.games:
-            self.send_message(room, 'Game already in {}'.format(self.games[room].state))
+            send_message(room, 'Game already in {}'.format(self.games[room].state))
         else:
-            self.games[kwargs.get('room')] = Dominion(admin=kwargs.get('sender'))
+            self.games[room] = Dominion(admin=sender, room=room)
 
+    @cmd('(?i)join', tag=True)
+    def join_game(self, room, sender):
+        if room not in self.games:
+            send_message(room, 'No games are active in this room')
+        elif self.games[room].state == 'setup':
+            self.games[room].add_player(sender)
+        else:
+            send_message(room, 'Can\'t join the game right now')
+
+    @cmd('(?i)start', tag=True)
+    def start_game(self, room, sender):
+        if room not in self.games:
+            send_message(room, 'No games are active in this room')
+        elif self.games[room].state == 'setup':
+            game = self.games[room]
+            if sender == game.admin:
+                game.start()
+            else:
+                send_message(room, 'No games are active in this room')
+        else:
+            send_message(room, 'Can\'t start the game right now')
+
+    # chat commands
     @cmd('(?i)smack ([\w ]*)')
     def smack(self, target, room, **kwargs):
         data = {'roomId': room}
@@ -111,7 +146,30 @@ class MessageHandler:
             print(name)
             print(person['personId'])
             if target == name or target == person['personId']:
-                self.send_message(room, '{} {}'.format(choice(INSULTS), name))
+                send_message(room, '{} {}'.format(choice(INSULTS), name))
                 break
         else:
-            self.send_message(room, 'It\'s rude to talk about people behind their back')
+            send_message(room, 'It\'s rude to talk about people behind their back')
+
+    # In-game commands
+    @cmd('(?i)play (\w+)', turn=True)
+    def action(self, card, game, **kwargs):
+        card = game.select_card(card)
+        if card is not None:
+            game.play(card)
+
+    @cmd('(?i)buy (\w+)', turn=True)
+    def buy(self, card, game, **kwargs):
+        card = game.select_card(card)
+        if card is not None:
+            game.buy(card)
+
+    @cmd('(?i)(\w+)', waiting_turn=True)
+    def select(self, card, game, **kwargs):
+        card = game.select_card(card)
+        if card is not None:
+            game.select(card)
+
+    @cmd('(?i)done (\w+)', turn=True)
+    def done(self, game, **kwargs):
+        game.done()

@@ -37,7 +37,12 @@ def get_message_info(message_id):
     return json.loads(r.text)
 
 
-def create_message(data):
+def send_message(room, text, markdown=False):
+    data = {'roomId': room}
+    if markdown:
+        data['markdown'] = text
+    else:
+        data['text'] = text
     return requests.post(
         API_TEMPLATE.format('messages'),
         json=data,
