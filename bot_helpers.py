@@ -36,13 +36,11 @@ def get_message_info(message_id):
 
 
 def create_message(data):
-    r = requests.post(
+    return requests.post(
         API_TEMPLATE.format('messages'),
         json=data,
         headers=HEADERS,
     )
-    print(r.reason)
-    return
 
 
 def list_messages(room_id, limit=None):
