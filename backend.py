@@ -5,7 +5,7 @@
 import os
 import re
 from random import choice
-from bot_helpers import MENTION_REGEX, PERSON_ID, DEBUG_ROOM, send_message, list_memberships
+from bot_helpers import MENTION_REGEX, PERSON_ID, send_message, list_memberships
 from dominion import Dominion
 
 
@@ -98,7 +98,7 @@ class MessageHandler:
             try:
                 func(self, text, room=room, sender=sender)
             except Exception as exc:
-                send_message(DEBUG_ROOM, exc)
+                send_message(self.admin_room, exc)
 
     @cmd('(?i)help', tag=True)
     def send_help(self, room, **kwargs):
