@@ -68,6 +68,7 @@ class MessageHandler:
 
     def __init__(self, db_conn):
         self.admin_room = os.environ['ADMIN_ROOM']
+        print('sid-debug - {}'.format(self.admin_room))
         self.send_message(self.admin_room, 'Hello')
 
         self.db_cur = db_conn.cursor()
