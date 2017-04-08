@@ -5,7 +5,7 @@
 import re
 import os
 from collections import defaultdict
-from bot_helpers import MENTION_REGEX, PERSON_ID, create_message
+from bot_helpers import MENTION_REGEX, PERSON_ID, create_message, get_person_info
 
 
 cmd_list = []
@@ -51,7 +51,9 @@ class MessageHandler:
         '1. -m=<meal> --> t=tower, f=fillet, p=popcorn\n'
         '2. -s --> spicy flag, include if you want a spicy burger (ignored if -m=p)\n'
         '3. -d=<drink> --> can of choice\n'
-        '4. -no_wings --> no wings for this order (default is to have wings)'
+        '4. -no_wings --> no wings for this order (default is to have wings)\n'
+        '5. -for=<person> --> order on behalf of someone else with a mention\n'
+        '6. -no_overwrite --> adds additional orders if this person already has one\n'
     )
 
     def __init__(self, db_conn):
@@ -63,14 +65,7 @@ class MessageHandler:
         self.all_drinks = defaultdict(int)
         self.all_meals = defaultdict(int)
         self.min_wings = 0
-
-    @property
-    def all_wings(self):
-        tens = (self.min_wings - 3) // 10
-        rest = self.min_wings - (tens * 10)  # may be negative
-        for threes in range(2):
-            if threes * 3 >= rest:
-                return (10 * tens) + (3 * threes)
+        self.orders = []
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
@@ -107,10 +102,11 @@ class MessageHandler:
         self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
     @cmd('(?i)cluck -m=(\w+)([ -=\w]*)')
-    def order(self, meal, args, **kwargs):
-        room = kwargs.get('room')
+    def order(self, meal, args, room, sender, **kwargs):
+        ''' put an order in for chicken '''
         if meal not in MEALS:
             self.send_message(room, 'I did not understand meal choice of {}'.format(meal))
+            return
         else:
             meal_name, price = MEALS[meal]
 
@@ -122,22 +118,41 @@ class MessageHandler:
             ]
         }
 
-        spicy = '-s' in order_args
-        wings = '-no_wings' not in order_args
+        spicy = None
+        if meal != 'p':
+            spicy = '-s' in order_args
+
+        if '-no_wings' in order_args:
+            wings = 0
+        else:
+            wings = 3
+            price += 1
+
         drink = order_args.get('-d', 'pepsi')
 
-        if meal == 'p':
-            self.all_meals[meal_name] += 1
-        else:
-            self.all_meals['{} {}'.format('spicy' if spicy else 'regular', meal_name)] += 1
-        self.all_drinks[drink] += 1
-        self.min_wings += 3 if wings else 0
+        orderer = order_args.get('-for', sender)
+
+        if '-no_overwrite' not in order_args:
+            self.orders = [order for order in self.orders if order[0] != orderer]
+
+        self.orders.append([
+            orderer,
+            {
+                'meal': meal_name,
+                'spicy': spicy,
+                'wings': wings,
+                'drink': drink,
+                'price': price,
+            }
+        ])
+
+        person_info = get_person_info(orderer)
 
         self.send_message(
             kwargs.get('room'),
             u'{} ordered a {}{} meal with {} hot wings and a can of {}. '
             'That costs £{:0.2f}'.format(
-                kwargs.get('sender'),
+                person_info['displayName'],
                 '' if meal == 'p' else ('spicy ' if spicy else 'regular '),
                 meal_name,
                 3 if wings else 0,
@@ -146,27 +161,68 @@ class MessageHandler:
             )
         )
 
+    @cmd('(?i)show money')
+    def show_money(self, room, **kwargs):
+        money = defaultdict(int)
+        for person, order in self.orders.items():
+            money[person] -= order['price']
+
+        self.send_message(
+            room,
+            '\n\n'.join(
+                '{} {} £{:0.2f}'.format(
+                    get_person_info(person)['displayName'],
+                    'owes' if amount < 0 else 'is owed',
+                    abs(amount),
+                )
+                for person, amount in money.items()
+            )
+        )
+
     @cmd('(?i)show order')
     def show_order(self, **kwargs):
+        all_drinks = defaultdict(int)
+        all_meals = defaultdict(int)
+        min_wings = 0
+
+        for order in self.orders.values():
+            if order['meal'] == 'popcorn':
+                all_meals[order['meal']] += 1
+            else:
+                all_meals[
+                    '{} {}'.format(
+                        'spicy' if order['spicy'] else 'regular',
+                        order['meal']
+                    )
+                ] += 1
+            all_drinks[order['drink']] += 1
+            min_wings += order['wings']
+
+        tens = max((min_wings - 3) // 10, 0)
+        rest = min_wings - (tens * 10)  # may be negative
+        for threes in range(2):
+            if threes * 3 >= rest:
+                all_wings = (10 * tens) + (3 * threes)
+                break
+
         self.send_message(
             kwargs.get('room'),
-            '### meals\n'
+            '###Meals\n'
             '{}\n\n'
-            '### wings\n'
+            '###Wings\n'
             '{}\n\n'
-            '### drinks\n'
+            '###Drinks\n'
             '{}'.format(
-                dict(self.all_meals),
-                self.all_wings,
-                dict(self.all_drinks)
+                dict(all_meals),
+                all_wings,
+                dict(all_drinks)
             ),
+            markdown=True
         )
 
     @cmd('(?i)clear order')
     def clear_order(self, **kwargs):
-        self.all_drinks = defaultdict(int)
-        self.all_meals = defaultdict(int)
-        self.min_wings = 0
+        self.orders = []
 
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
