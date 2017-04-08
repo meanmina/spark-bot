@@ -2,6 +2,7 @@
 '''
     Main backend where spark messages land and are parsed
 '''
+import os
 import re
 from random import choice
 from bot_helpers import MENTION_REGEX, PERSON_ID, DEBUG_ROOM, send_message, list_memberships
