@@ -105,9 +105,8 @@ class MessageHandler:
         data = {'roomId': kwargs.get('room')}
         people = list_memberships(data=data)
         for person in people['items']:
-            print(person)
             name = person.get('personDisplayName')
-            if target == name or target == person['id']:
+            if target == name or target == person['personId']:
                 self.send_message(room, '{} {}'.format(name, choice(INSULTS)))
                 break
         else:
