@@ -4,6 +4,7 @@
 '''
 import re
 import os
+import json
 from collections import defaultdict
 from bot_helpers import MENTION_REGEX, PERSON_ID, create_message, get_person_info
 
@@ -63,9 +64,6 @@ class MessageHandler:
 
         self.db_cur = db_conn.cursor()
 
-        self.all_drinks = defaultdict(int)
-        self.all_meals = defaultdict(int)
-        self.min_wings = 0
         self.orders = []
         self.payments = []
 
@@ -167,6 +165,7 @@ class MessageHandler:
                 price
             )
         )
+        self.save_state()
 
     @cmd('(?i)money')
     def show_money(self, room, **kwargs):
@@ -247,6 +246,7 @@ class MessageHandler:
     @cmd('(?i)clear order')
     def clear_order(self, **kwargs):
         self.orders = []
+        self.save_state()
 
     @cmd('(?i)paid ([\d\.]+) for chicken')
     def paid_rfc(self, amount, room, sender, **kwargs):
@@ -261,6 +261,7 @@ class MessageHandler:
                 sender,
                 money
             ])
+        self.save_state()
 
     @cmd('(?i)paid ([\d\.]+) to (\w+)')
     def paid_person(self, amount, payee, room, sender, **kwargs):
@@ -279,6 +280,7 @@ class MessageHandler:
                 payee,
                 -money
             ])
+        self.save_state()
 
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
@@ -287,3 +289,18 @@ class MessageHandler:
         else:
             data['text'] = text
         create_message(data=data)
+
+    def save_state(self):
+
+        state = json.dumps(
+            {
+                'orders': self.orders,
+                'payments': self.payments
+            },
+            separators=(',', ':')
+        )
+        self.send_message(self.admin_room, 'state={}'.format(state))
+
+    def load_state(self):
+        messages = list_messages(self.admin_room)
+
