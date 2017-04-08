@@ -69,6 +69,7 @@ class MessageHandler:
         self.send_message(self.admin_room, 'Hello')
 
         self.db_cur = db_conn.cursor()
+        self.games = {}
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
