@@ -149,8 +149,7 @@ class MessageHandler:
     # chat commands
     @cmd('(?i)smack (.+)')
     def smack(self, target, room, **kwargs):
-        data = {'roomId': room}
-        people = list_memberships(data=data)
+        people = list_memberships(room)
         for person in people['items']:
             name = person.get('personDisplayName')
             print(name)
