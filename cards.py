@@ -98,6 +98,7 @@ class Malitia(Action):
 
     def action(self, game):
         super().action(game)
+        waiting_on = []
         for attacked_player in game.turn_order:
             if attacked_player == game.turn:
                 break
@@ -116,10 +117,24 @@ class Malitia(Action):
                 ),
                 direct=True
             )
-            game.waiting_public.append([
-                attacked_player.id,
-                attacked_player.discard
-            ])
+            waiting_on.append('{} ({})'.format(attacked_player, num_to_discard))
+            game.waiting_actions.append({
+                'public': True,
+                'p_id': attacked_player.id,
+                'function': attacked_player.discard,
+                'count': num_to_discard,
+                'p_name': attacked_player.nickname,
+                'description': 'discard after being attacked by a malitia'
+            })
+        if waiting_on:
+            send_message(
+                game.room,
+                'Waiting for the following players to discard cards: {}'.format(
+                    ', '.join(waiting_on)
+                ),
+            )
+        else:
+            send_message(game.room, 'Nobody has to discard')
 
 
 class Witch(Action):

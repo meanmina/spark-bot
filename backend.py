@@ -41,10 +41,16 @@ def cmd(regex, tag=False, turn=False):
                     return
                 if game.state != 'progress':
                     return
-                if len(game.waiting_public) + len(game.waiting_private) > 0:
-                    send_message(room, 'Waiting for one or more players to select a card')
-                    return
                 if sender != game.turn.id:
+                    send_message('It\'s not your turn')
+                    return
+                if game.waiting_actions:
+                    send_message(room, 'Waiting for: {}'.format(
+                        ', '.join(
+                            '{p_name} to {description}'.format(**action)
+                            for action in game.waiting_actions
+                        )
+                    ))
                     return
             return fn(obj, *match.groups(), **kwargs)
         cmd_list.append(inner)
@@ -179,27 +185,37 @@ class MessageHandler:
         if game is None:
             # should probably sort these by time at some point
             for game in self.games.values():
-                for player_id, function in game.waiting_private:
-                    if sender == player_id:
-                        break
-                else:
-                    continue
-                break
-            else:
-                return
-            card = game.identify_card(card)
-            if function(card):
-                game.waiting_private.remove([player_id, function])
+                for action in game.waiting_actions:
+                    if action['public']:
+                        continue
+                    if sender == action['p_id']:
+                        card = game.identify_card(card)
+                        if action['function'](card):
+                            action['count'] -= 1
+                            if action['count'] <= 0:
+                                game.waiting_actions.remove(action)
+                            return
         # in a game
         else:
-            for player_id, function in game.waiting_public:
-                if sender == player_id:
-                    break
-            else:
-                return
-            card = game.identify_card(card)
-            if function(card):
-                game.waiting_public.remove([player_id, function])
+            for action in game.waiting_actions:
+                if not action['public']:
+                    continue
+                if sender == action['p_id']:
+                    card = game.identify_card(card)
+                    if action['function'](card):
+                        action['count'] -= 1
+                        if action['count'] <= 0:
+                            game.waiting_actions.remove(action)
+                        return
+
+    @cmd('(?i)(\w+), ?([\w ,]+)')
+    def select_multiple(self, card, other_cards, **kwargs):
+        ''' If it looks like a mutliple command split and send separately'''
+        self.select(card, **kwargs)
+        if ',' in other_cards:
+            self.select_multiple(other_cards, **kwargs)
+        else:
+            self.select(other_cards, **kwargs)
 
     @cmd('(?i)pass (\w+)', turn=True)
     def done(self, game, **kwargs):
