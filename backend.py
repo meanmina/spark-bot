@@ -217,6 +217,6 @@ class MessageHandler:
         else:
             self.select(other_cards, **kwargs)
 
-    @cmd('(?i)pass (\w+)', turn=True)
+    @cmd('(?i)pass', turn=True)
     def done(self, game, **kwargs):
         game.done()

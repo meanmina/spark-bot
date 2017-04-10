@@ -37,6 +37,11 @@ class Action(Card):
         player.action_treasure += self.treasure
         for _ in range(self.cards):
             player.draw_card()
+        send_message(
+            game.room,
+            'You now have:\n\n' + player.hand_as_message,
+            markdown=True,
+        )
 
 
 # Treasure
@@ -82,7 +87,7 @@ class Province(Victory):
 
 class Curse(Victory):
     name = 'curse'
-    cost = float('inf')
+    cost = 0
     points = -1
 
 
@@ -148,15 +153,31 @@ class Witch(Action):
 
     def action(self, game):
         super().action(game)
+        safe = []
+        cursed = []
+        no_more_curses = []
         for attacked_player in game.turn_order:
             if attacked_player == game.turn:
                 break
             if attacked_player.protected:
+                safe.append(attacked_player)
                 continue
             try:
                 attacked_player.gain_card(game.take_card(Curse))
+                cursed.append(attacked_player)
             except IndexError:
-                pass  # If they run out then don't worry
+                # If they run out then don't worry
+                no_more_curses.append(attacked_player)
+                pass
+        if safe:
+            send_message(game.room, 'Protected: {}'.format(', '.join(safe)))
+        if cursed:
+            send_message(game.room, 'Cursed: {}'.format(', '.join(safe)))
+        if no_more_curses:
+            send_message(
+                game.room,
+                'There are no curses left for: {}'.format(', '.join(no_more_curses))
+            )
 
 
 STARTING_CARDS = [Estate()] * 3 + [Copper()] * 7
