@@ -5,9 +5,8 @@
 import os
 import psycopg2
 from urllib.parse import urlparse
-from bottle import Bottle, abort
+from aiohttp import web
 from backend import MessageHandler
-from .bottle_helpers import webapi, picture
 from bot_helpers import get_message_info
 
 
@@ -16,8 +15,6 @@ class Server:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.last_message = None
-        self._app = Bottle()
 
         url = urlparse(os.environ["DATABASE_URL"])
         db_conn = psycopg2.connect(
@@ -29,25 +26,25 @@ class Server:
         )
         self.backend = MessageHandler(db_conn)
 
+        self.rest_api = web.Application()
+        self.rest_api.router.add_post('/messages', self.post_message)
+        self.rest_api.router.add_static('/images/avatar', 'dominion.jpg')
+
     def start(self):
         ''' start the server '''
-        self._app.run(host=self.host, port=self.port)
+        web.run_app(self.rest_api, host=self.host, port=self.port)
 
-    @webapi('POST', '/messages')
-    def get_messages(self, data):
+    async def post_message(self, request):
         ''' Receive a message from a spark webhook '''
+        data = await request.json()
         try:
-            message_id = data['data']['id']
+            message_id = data['id']
         except KeyError:
-            abort(400, 'expected message id')
+            return web.Responce(status=400, text='expected message id')
 
         message_info = get_message_info(message_id)
         try:
             self.backend.parse_message(message_info)
         except Exception as err:
             print(err)
-
-    @picture('/images/avatar')
-    def letter_pic(self):
-        ''' picture to use for the dominion bot image '''
-        return 'dominion.jpg'
+            return web.Responce(status=500)
