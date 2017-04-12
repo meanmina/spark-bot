@@ -40,11 +40,11 @@ class Server:
         try:
             message_id = data['id']
         except KeyError:
-            return web.Responce(status=400, text='expected message id')
+            return web.Response(status=400, text='expected message id')
 
         message_info = get_message_info(message_id)
         try:
             self.backend.parse_message(message_info)
         except Exception as err:
             print(err)
-            return web.Responce(status=500)
+            return web.Response(status=500)
