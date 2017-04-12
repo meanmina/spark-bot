@@ -52,3 +52,4 @@ class Server:
         except Exception as err:
             print(err)
             return web.Response(status=500)
+        return web.Response(status=200)
