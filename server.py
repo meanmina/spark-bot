@@ -28,7 +28,7 @@ class Server:
 
         self.rest_api = web.Application()
         self.rest_api.router.add_post('/messages', self.post_message)
-        self.rest_api.router.add_static('/images/avatar', 'dominion.jpg')
+        self.rest_api.router.add_static('/images/', './images/')
 
     def start(self):
         ''' start the server '''
