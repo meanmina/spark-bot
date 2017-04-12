@@ -40,7 +40,7 @@ class Server:
         print('sid-debug')
         print(data)
         try:
-            message_id = data['id']
+            message_id = data['data']['id']
             print(message_id)
         except KeyError:
             return web.Response(status=400, text='expected message id')
