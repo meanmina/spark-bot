@@ -37,12 +37,16 @@ class Server:
     async def post_message(self, request):
         ''' Receive a message from a spark webhook '''
         data = await request.json()
+        print('sid-debug')
+        print(data)
         try:
             message_id = data['id']
+            print(message_id)
         except KeyError:
             return web.Response(status=400, text='expected message id')
 
         message_info = get_message_info(message_id)
+        print(message_info)
         try:
             self.backend.parse_message(message_info)
         except Exception as err:
