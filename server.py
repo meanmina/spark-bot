@@ -52,7 +52,7 @@ class Server:
         return web.Response(status=200)
 
     async def websocket_handler(self, request):
-        ws = web.WebSocketRewsponse()
+        ws = web.WebSocketResponse()
         await ws.prepare(request)
 
         async for msg in ws:
