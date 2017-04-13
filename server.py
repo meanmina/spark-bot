@@ -5,7 +5,7 @@
 import os
 import psycopg2
 from urllib.parse import urlparse
-from aiohttp import web
+from aiohttp import web, WSMsgType
 from backend import MessageHandler
 from bot_helpers import get_message_info
 
@@ -29,6 +29,7 @@ class Server:
         self.rest_api = web.Application()
         self.rest_api.router.add_post('/messages', self.post_message)
         self.rest_api.router.add_static('/images/', './images/')
+        self.rest_api.router.add_get('/ws', self.websocket_handler)
 
     def start(self):
         ''' start the server '''
@@ -49,3 +50,20 @@ class Server:
             print(err)
             return web.Response(status=500)
         return web.Response(status=200)
+
+    async def websocket_handler(self, request):
+        ws = web.WebSocketRewsponse()
+        await ws.prepare(request)
+
+        async for msg in ws:
+            if msg.type == WSMsgType.TEXT:
+                if msg.data == 'close':
+                    await ws.close()
+                else:
+                    ws.send_str(msg.data + '/answer')
+            elif msg.type == WSMsgType.ERROR:
+                print('ws connection closed with exception %s' % ws.exception())
+
+        print('websocket connection closed')
+
+        return ws
