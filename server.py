@@ -89,7 +89,7 @@ class Server:
             Choose which data to draw blant-altman plot for.<br>
             Accepted data sets are: observed, formula_1, formula_2, formula_3, and formula_4
             <br><br>
-            <form action="/draw_graph" method="post">
+            <form action="/becky" method="post">
                 First formula:<br>
                 <input id="f1" name="f1" type="text" value="">
                 <br><br>
@@ -99,7 +99,8 @@ class Server:
                 <input type="submit" value="Draw">
             </form>
             <br><br>
-            Results can be seen <a href="/images/graph.png">here</a> (you may need to refresh)
+        </body>
+        </html>
         '''
         return web.Response(
             status=200, reason='OK', headers={'Content-Type': 'text/html'},
@@ -107,6 +108,14 @@ class Server:
         )
 
     async def draw_graph(self, request):
+        html = '''
+        <html>
+        <body>
+        {}
+        </body>
+        </html>
+        '''
+
         data = await request.post()
         with open('axes.json', 'r') as fo:
             axes = json.load(fo)
@@ -115,10 +124,16 @@ class Server:
             f1 = [float(n) for n in axes[data['f1']]]
             f2 = [float(n) for n in axes[data['f2']]]
         except KeyError:
-            return web.Response(status=200)
+            return web.Response(
+                status=200, reason='OK', headers={'Content-Type': 'text/html'},
+                text=html.format(
+                    'Invalid data-set names {f1} and {f2}<br><br>'
+                    '<a href="/becky">back</a>'.format(**data)
+                )
+            )
 
         bland_x = [(f1[i] + f2[i]) / 2 for i in range(len(f1))]
-        bland_y = [f1(i) - f2[i] for i in range(len(f1))]
+        bland_y = [f1[i] - f2[i] for i in range(len(f1))]
 
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
@@ -127,4 +142,9 @@ class Server:
         ax.plot([0, 35], [y_mean, y_mean], 'g-')
         plt.savefig('/images/graph.png')
         plt.close(fig)
-        return web.Response(status=200)
+        return web.Response(
+            status=200, reason='OK', headers={'Content-Type': 'text/html'},
+            text=html.format(
+                'Success! Your graph can be seen <a href="/images/graph.png">here</a>'
+            )
+        )
