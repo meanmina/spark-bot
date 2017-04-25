@@ -139,7 +139,7 @@ class Server:
         ax = fig.add_subplot(1, 1, 1)
         ax.plot(bland_x, bland_y, 'bo')
         y_mean = np.mean(bland_y)
-        ax.plot([0, 35], [y_mean, y_mean], 'g-')
+        ax.plot([min(bland_x) - 5, max(bland_x) + 5], [y_mean, y_mean], 'g-')
         plt.savefig('images/graph.png')
         plt.close(fig)
         return web.Response(
