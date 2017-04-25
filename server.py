@@ -9,6 +9,7 @@ from aiohttp import web, WSMsgType
 from backend import MessageHandler
 from bot_helpers import get_message_info
 import json
+import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
