@@ -8,6 +8,8 @@ from urllib.parse import urlparse
 from aiohttp import web, WSMsgType
 from backend import MessageHandler
 from bot_helpers import get_message_info
+import json
+import matplotlib.pyplot as plt
 
 
 class Server:
@@ -30,6 +32,10 @@ class Server:
         self.rest_api.router.add_post('/messages', self.post_message)
         self.rest_api.router.add_static('/images/', './images/')
         self.rest_api.router.add_get('/ws', self.websocket_handler)
+
+        # Becky stuff
+        self.rest_api.router.add_get('/becky', self.graph_input)
+        self.rest_api.router.add_post('/draw_graph', self.draw_graph)
 
     def start(self):
         ''' start the server '''
@@ -67,3 +73,46 @@ class Server:
         print('websocket connection closed')
 
         return ws
+
+    async def graph_input(self, request):
+        html = '''
+            Choose which daata to draw blant-altman plot for.<br>
+            Accepted data sets are: observed, formula_1, formula_2, formula_3, and formula_4<br><br>
+            <form action='/draw_graph" method="post" accept-charset="utf-8"
+                  enctype="application/x-www-form-urlencoded">
+                <label for="f1">First formula</label>
+                <input id="f1" name="f1" type="text" value="" autofocus/>
+                <label for="f2">Second formula</label>
+                <input id="f2" name="f2" type="text" value=""/>
+
+                <input type="submit" value="Draw"/>
+            </form>
+            <br><br>
+            Results can be seen <a href="/images/graph.png">here</a> (you may need to refresh)
+        '''
+        return web.Response(
+            status=200, reason='OK', headers={'Content-Type': 'text/html'},
+            text=html
+        )
+
+    async def draw_graph(self, request):
+        data = await request.post()
+        with open('axes.json', 'r') as fo:
+            axes = json.load(fo)
+
+        try:
+            f1 = axes[data['f1']]
+            f2 = axes[data['f2']]
+        except KeyError:
+            return web.Response(status=400)
+
+        bland_x = [(f1[i] + f2[i]) / 2 for i in range(len(f1))]
+        bland_y = [f1(i) - f2[i] for i in range(len(f1))]
+
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 1, 1)
+        ax.plot(bland_x, bland_y, 'bo')
+        y_mean = sum(bland_y) / len(bland_y)
+        ax.plot([0, 35], [y_mean, y_mean], 'g-')
+        plt.savefig('/images/graph.png')
+        plt.close(fig)
