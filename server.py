@@ -10,6 +10,7 @@ from backend import MessageHandler
 from bot_helpers import get_message_info
 import json
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Server:
@@ -116,7 +117,7 @@ class Server:
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
         ax.plot(bland_x, bland_y, 'bo')
-        y_mean = sum(bland_y) / len(bland_y)
+        y_mean = np.mean(bland_y)
         ax.plot([0, 35], [y_mean, y_mean], 'g-')
         plt.savefig('/images/graph.png')
         plt.close(fig)
