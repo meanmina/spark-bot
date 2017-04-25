@@ -89,7 +89,7 @@ class Server:
             Choose which data to draw blant-altman plot for.<br>
             Accepted data sets are: observed, formula_1, formula_2, formula_3, and formula_4
             <br><br>
-            <form action='/draw_graph" method="post">
+            <form action="/draw_graph" method="post">
                 First formula:<br>
                 <input id="f1" name="f1" type="text" value="">
                 <br><br>
