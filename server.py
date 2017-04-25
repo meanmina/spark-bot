@@ -91,10 +91,10 @@ class Server:
             <br><br>
             <form action="/draw_graph" method="post">
                 First formula:<br>
-                <input id="f1" name="f1" type="text" value="">
+                <input id="f1" name="f1" type="text" value="formula_1">
                 <br><br>
                 Second formula:<br>
-                <input id="f2" name="f2" type="text" value="">
+                <input id="f2" name="f2" type="text" value="formula_2">
                 <br><br>
                 <input type="submit" value="Draw">
             </form>
@@ -140,7 +140,7 @@ class Server:
         ax.plot(bland_x, bland_y, 'bo')
         y_mean = np.mean(bland_y)
         ax.plot([0, 35], [y_mean, y_mean], 'g-')
-        plt.savefig('/images/graph.png')
+        plt.savefig('images/graph.png')
         plt.close(fig)
         return web.Response(
             status=200, reason='OK', headers={'Content-Type': 'text/html'},
