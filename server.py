@@ -29,6 +29,7 @@ class Server:
         self.backend = MessageHandler(db_conn)
 
         self.rest_api = web.Application()
+        self.rest_api.router.add_get('/', self.index)
         self.rest_api.router.add_post('/messages', self.post_message)
         self.rest_api.router.add_static('/images/', './images/')
         self.rest_api.router.add_get('/ws', self.websocket_handler)
@@ -36,6 +37,9 @@ class Server:
         # Becky stuff
         self.rest_api.router.add_get('/becky', self.graph_input)
         self.rest_api.router.add_post('/draw_graph', self.draw_graph)
+
+    async def index(self, request):
+        return web.Response(text='Hello from Aiohttp!')
 
     def start(self):
         ''' start the server '''
@@ -76,7 +80,7 @@ class Server:
 
     async def graph_input(self, request):
         html = '''
-            Choose which daata to draw blant-altman plot for.<br>
+            Choose which data to draw blant-altman plot for.<br>
             Accepted data sets are: observed, formula_1, formula_2, formula_3, and formula_4<br><br>
             <form action='/draw_graph" method="post" accept-charset="utf-8"
                   enctype="application/x-www-form-urlencoded">
@@ -116,3 +120,4 @@ class Server:
         ax.plot([0, 35], [y_mean, y_mean], 'g-')
         plt.savefig('/images/graph.png')
         plt.close(fig)
+        return web.Response(status=200)
