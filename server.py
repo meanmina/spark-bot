@@ -112,10 +112,10 @@ class Server:
             axes = json.load(fo)
 
         try:
-            f1 = axes[data['f1']]
-            f2 = axes[data['f2']]
+            f1 = [float(n) for n in axes[data['f1']]]
+            f2 = [float(n) for n in axes[data['f2']]]
         except KeyError:
-            return web.Response(status=400)
+            return web.Response(status=200)
 
         bland_x = [(f1[i] + f2[i]) / 2 for i in range(len(f1))]
         bland_y = [f1(i) - f2[i] for i in range(len(f1))]
