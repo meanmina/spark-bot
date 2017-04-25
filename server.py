@@ -9,10 +9,10 @@ from aiohttp import web, WSMsgType
 from backend import MessageHandler
 from bot_helpers import get_message_info
 import json
+import numpy as np
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.pyplot as plt  # noqa: E402
 
 
 class Server:
@@ -83,16 +83,20 @@ class Server:
 
     async def graph_input(self, request):
         html = '''
+        <!DOCTYPE html>
+        <html>
+        <body>
             Choose which data to draw blant-altman plot for.<br>
-            Accepted data sets are: observed, formula_1, formula_2, formula_3, and formula_4<br><br>
-            <form action='/draw_graph" method="post" accept-charset="utf-8"
-                  enctype="application/x-www-form-urlencoded">
-                <label for="f1">First formula</label>
-                <input id="f1" name="f1" type="text" value="" autofocus/>
-                <label for="f2">Second formula</label>
-                <input id="f2" name="f2" type="text" value=""/>
-
-                <input type="submit" value="Draw"/>
+            Accepted data sets are: observed, formula_1, formula_2, formula_3, and formula_4
+            <br><br>
+            <form action='/draw_graph" method="post">
+                First formula:<br>
+                <input id="f1" name="f1" type="text" value="">
+                <br><br>
+                Second formula:<br>
+                <input id="f2" name="f2" type="text" value="">
+                <br><br>
+                <input type="submit" value="Draw">
             </form>
             <br><br>
             Results can be seen <a href="/images/graph.png">here</a> (you may need to refresh)
