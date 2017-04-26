@@ -17,7 +17,7 @@ async def graph_input(request):
     x_selected = None
     y_selected = None
     if request.method == 'POST':
-        data = request.post()
+        data = await request.post()
         x_selected = data.get('data_1')
         y_selected = data.get('data_2')
         graph_type = request.match_info.get('graph_type')
