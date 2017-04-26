@@ -29,17 +29,18 @@ async def graph_input(request):
     <!DOCTYPE html>
     <html>
     <body>
-        Choose which data to draw blant-altman plot for.<br>
-        Accepted data sets are: observed, formula_1, formula_2, formula_3, and formula_4
-        <br><br>
+        Choose which data to draw a vs plot for.<br>
+        <br>
         <form action="/becky/vs" method="post">
             X Axis:<br>
             <select name="data_1">
             {}
+            </select>
             <br><br>
             Y Axis:<br>
             <select name="data_2">
             {}
+            </select>
             <br><br>
             <input type="submit" value="Draw 'VS' Graph">
         </form>
