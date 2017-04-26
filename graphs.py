@@ -79,7 +79,8 @@ async def graph_input(request):
         text=html
     )
 
-async def draw_graph(data, graph_type):
+
+def draw_graph(data, graph_type):
     if graph_type is None:
         print('Unknown graph type {}'.format(graph_type))
         return False
