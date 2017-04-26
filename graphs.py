@@ -29,7 +29,7 @@ async def graph_input(request):
 
     vs_image = ''
     if os.path.isfile('images/vs_graph.png'):
-        vs_image = '<img src="images/vs_graph.png">'
+        vs_image = '<img src="/images/vs_graph.png">'
 
     html = '''
     <!DOCTYPE html>
