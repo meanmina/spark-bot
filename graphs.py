@@ -17,10 +17,11 @@ async def graph_input(request):
     x_selected = None
     y_selected = None
     if request.method == 'POST':
-        x_selected = request.post().get('data_1')
-        y_selected = request.post().get('data_2')
+        data = request.post()
+        x_selected = data.get('data_1')
+        y_selected = data.get('data_2')
         graph_type = request.match_info.get('graph_type')
-        if draw_graph(request, graph_type):
+        if draw_graph(data, graph_type):
             draw_message = '<strong>Success!</strong> your graph should be visible below'
         else:
             draw_message = 'Oh no, something went wrong. Sorry :('
@@ -71,12 +72,11 @@ async def graph_input(request):
         text=html
     )
 
-async def draw_graph(request, graph_type):
+async def draw_graph(data, graph_type):
     if graph_type is None:
         print('Unknown graph type {}'.format(graph_type))
         return False
 
-    data = await request.post()
     with open('axes.json', 'r') as fo:
         axes = json.load(fo)
 
