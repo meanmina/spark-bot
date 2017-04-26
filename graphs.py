@@ -1,4 +1,5 @@
 import json
+import os.path
 from aiohttp import web
 import numpy as np
 import matplotlib
@@ -26,6 +27,10 @@ async def graph_input(request):
         else:
             draw_message = 'Oh no, something went wrong. Sorry :('
 
+    vs_image = ''
+    if os.path.isfile('images/vs_graph.png'):
+        vs_image = '<img src="images/vs_graph.png">'
+
     html = '''
     <!DOCTYPE html>
     <html>
@@ -47,24 +52,26 @@ async def graph_input(request):
         </form>
         <br><br>
         {}
+        {}
     </body>
     </html>
     '''.format(
         ''.join(
-            '<option>{}{}</option>'.format(
+            '<option{}>{}</option>'.format(
+                ' selected="selected"' if option == x_selected else '',
                 option,
-                'selected="selected"' if option == x_selected else ''
             )
             for option in FORM_OPTIONS
         ),
         ''.join(
-            '<option>{}{}</option>'.format(
+            '<option{}>{}</option>'.format(
+                ' selected="selected"' if option == y_selected else '',
                 option,
-                'selected="selected"' if option == y_selected else ''
             )
             for option in FORM_OPTIONS
         ),
         draw_message,
+        vs_image,
     )
 
     return web.Response(
@@ -100,7 +107,7 @@ async def draw_graph(data, graph_type):
         graph_name = 'bland-altman'
 
     ax.plot(xs, ys, 'bx')
-    plt.close(fig)
     plt.savefig('images/{}.png'.format(graph_name))
+    plt.close(fig)
 
     return True
