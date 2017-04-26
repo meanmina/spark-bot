@@ -8,11 +8,7 @@ from urllib.parse import urlparse
 from aiohttp import web, WSMsgType
 from backend import MessageHandler
 from bot_helpers import get_message_info
-import json
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt  # noqa: E402
+from graphs import draw_graph, graph_input
 
 
 class Server:
@@ -38,8 +34,8 @@ class Server:
         self.rest_api.router.add_get('/ws', self.websocket_handler)
 
         # Becky stuff
-        self.rest_api.router.add_get('/becky', self.graph_input)
-        self.rest_api.router.add_post('/draw_graph', self.draw_graph)
+        self.rest_api.router.add_get('/becky', graph_input)
+        self.rest_api.router.add_post('/becky/{graph_type}', graph_input)
 
     async def index(self, request):
         return web.Response(text='Hello from Aiohttp!')
@@ -80,71 +76,3 @@ class Server:
         print('websocket connection closed')
 
         return ws
-
-    async def graph_input(self, request):
-        html = '''
-        <!DOCTYPE html>
-        <html>
-        <body>
-            Choose which data to draw blant-altman plot for.<br>
-            Accepted data sets are: observed, formula_1, formula_2, formula_3, and formula_4
-            <br><br>
-            <form action="/draw_graph" method="post">
-                First formula:<br>
-                <input id="f1" name="f1" type="text" value="formula_1">
-                <br><br>
-                Second formula:<br>
-                <input id="f2" name="f2" type="text" value="formula_2">
-                <br><br>
-                <input type="submit" value="Draw">
-            </form>
-            <br><br>
-        </body>
-        </html>
-        '''
-        return web.Response(
-            status=200, reason='OK', headers={'Content-Type': 'text/html'},
-            text=html
-        )
-
-    async def draw_graph(self, request):
-        html = '''
-        <html>
-        <body>
-        {}
-        </body>
-        </html>
-        '''
-
-        data = await request.post()
-        with open('axes.json', 'r') as fo:
-            axes = json.load(fo)
-
-        try:
-            f1 = [float(n) for n in axes[data['f1']]]
-            f2 = [float(n) for n in axes[data['f2']]]
-        except KeyError:
-            return web.Response(
-                status=200, reason='OK', headers={'Content-Type': 'text/html'},
-                text=html.format(
-                    'Invalid data-set names {f1} and {f2}<br><br>'
-                    '<a href="/becky">back</a>'.format(**data)
-                )
-            )
-
-        bland_x = [(f1[i] + f2[i]) / 2 for i in range(len(f1))]
-        bland_y = [f1[i] - f2[i] for i in range(len(f1))]
-
-        fig = plt.figure()
-        ax = fig.add_subplot(1, 1, 1)
-        ax.plot(bland_x, bland_y, 'bo')
-        y_mean = np.mean(bland_y)
-        ax.plot([min(bland_x) - 5, max(bland_x) + 5], [y_mean, y_mean], 'g-')
-        plt.savefig('images/graph.png')
-        plt.close(fig)
-        return web.Response(
-            status=200, reason='OK', headers={'Content-Type': 'text/html'},
-            text=html.format(
-                'Success! Your graph can be seen <a href="/images/graph.png">here</a>'
-            )
-        )
