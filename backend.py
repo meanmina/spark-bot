@@ -48,12 +48,14 @@ class MessageHandler:
         '+ cancel order for **person** --> Cancel someone elses order\n'
         '+ clear order --> Clears current order, nobody is charged\n'
         '+ money --> See who owes what\n'
+        '+ set default **order** --> Set your default order\n'
         '+ help --> Display this message'
     )
 
     orders_text = (
         '###Menu\n'
-        '+ **meal** --> t=tower, f=fillet, p=popcorn, b=beef burger REQUIRED\n'
+        '+ <blank> --> places default order if you have one\n'
+        '+ **meal** --> t=tower, f=fillet, p=popcorn, b=beef burger\n'
         '+ -s --> spicy flag, include if you want a spicy burger (ignored if meal is \'p\')\n'
         '+ -d=**drink** --> can of choice, no spaces allowed\n'
         '+ -no_wings --> no wings for this order (default is to have wings)\n'
@@ -68,6 +70,7 @@ class MessageHandler:
         self.db_cur = db_conn.cursor()
 
         self.orders = []
+        self.default_orders = {}
         self.money = defaultdict(int)
         self.load_state()
 
@@ -103,6 +106,22 @@ class MessageHandler:
     def odering_info(self, **kwargs):
         self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
+    @cmd('(?i)set default (\w+)')
+    def set_default(self, order, sender, **kwargs):
+        self.default_orders[sender] = order
+        self.save_state()
+
+    @cmd('(?i)cluck$')
+    def default_order(self, sender, room, **kwargs):
+        if sender not in self.default_orders:
+            self.send_message(
+                room,
+                'I don\'t know your default order, use "set default" to tell me'
+            )
+        else:
+            text = 'cluck {}'.format(self.default_orders[sender])
+            self.order(text, room=room, sender=sender)
+
     @cmd('(?i)cluck for (\w+) (\w)(?:$| )([ -=\w]*)')
     def order_other(self, person, meal, args, room, **kwargs):
         ''' pretend to be ordering from someone else - patch the arguments to the cmd decorator '''
@@ -112,7 +131,7 @@ class MessageHandler:
             return
         text = 'cluck {} {}'.format(meal, args)
         # alter the sender and pass the command through
-        self.order(text, **{'room': room, 'sender': person})
+        self.order(text, room=room, sender=person)
 
     @cmd('(?i)cluck (\w)(?:$| )([ -=\w]*)')
     def order(self, meal, args, room, sender, **kwargs):
@@ -356,7 +375,8 @@ class MessageHandler:
             {
                 'orders': self.orders,
                 # convert money to regular dict
-                'money': dict(self.money)
+                'money': dict(self.money),
+                'defaults': self.default_orders
             },
             separators=(',', ':')
         )
@@ -369,6 +389,7 @@ class MessageHandler:
             if text[:6] == 'state=':
                 state = json.loads(text[6:])
                 self.orders = state.get('orders', [])
+                self.default_orders = state.get('defaults', {})
 
                 # load money back into default dict
                 for person, amount in state.get('money', {}).items():
