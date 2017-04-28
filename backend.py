@@ -106,10 +106,11 @@ class MessageHandler:
     def odering_info(self, **kwargs):
         self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
 
-    @cmd('(?i)set default (\w+)')
-    def set_default(self, order, sender, **kwargs):
+    @cmd('(?i)set default ([\w -=]+)')
+    def set_default(self, order, sender, room, **kwargs):
         self.default_orders[sender] = order
         self.save_state()
+        self.send_message(room, 'done')
 
     @cmd('(?i)cluck$')
     def default_order(self, sender, room, **kwargs):
