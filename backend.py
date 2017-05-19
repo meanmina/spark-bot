@@ -32,6 +32,14 @@ def cmd(regex):
     return cmd_decorator
 
 
+def get_display_name(p_id):
+    if p_id == 'rfc':
+        display_name = 'The chicken shop'
+    else:
+        display_name = get_person_info(p_id).get('displayName', 'Unknown')
+    return display_name
+
+
 class MessageHandler:
     ''' handles spark messages '''
 
@@ -137,12 +145,12 @@ class MessageHandler:
     @cmd('(?i)cluck (\w)(?:$| )([ -=\w]*)')
     def order(self, meal, args, room, sender, **kwargs):
         ''' put an order in for chicken '''
-        person_info = get_person_info(sender)
+        display_name = get_display_name(sender)
         if meal == 'b':
             self.send_message(room, 'Beef burgers (like all things) are inferior to chicken')
             self.send_message(
                 room,
-                '{} has selected: famine'.format(person_info.get('displayName'))
+                '{} has selected: famine'.format(display_name)
             )
             return
         if meal not in MEALS:
@@ -191,7 +199,7 @@ class MessageHandler:
             room,
             u'{} ordered a {}{} meal with {} hot wings and a can of {}{}. '
             'That costs £{:0.2f}'.format(
-                person_info.get('displayName'),
+                display_name,
                 '' if meal == 'p' else ('spicy ' if spicy else 'regular '),
                 meal_name,
                 3 if wings else 0,
@@ -213,7 +221,7 @@ class MessageHandler:
 
         credit = [
             '{} is owed £{:0.2f}'.format(
-                get_person_info(person).get('displayName'),
+                get_display_name(person),
                 amount,
             )
             for person, amount in money.items()
@@ -221,7 +229,7 @@ class MessageHandler:
         ]
         debt = [
             '{} owes £{:0.2f}'.format(
-                get_person_info(person).get('displayName'),
+                get_display_name(person),
                 abs(amount),
             )
             for person, amount in money.items()
@@ -265,7 +273,7 @@ class MessageHandler:
             min_wings += order['wings']
             if order['notes']:
                 comments.append('{} requested "{}"'.format(
-                    get_person_info(person).get('displayName'),
+                    get_display_name(person),
 
                     order['notes'][0])
                 )
@@ -327,14 +335,17 @@ class MessageHandler:
     def paid_rfc(self, amount, room, sender, **kwargs):
         try:
             money = float(amount)
-        except ValueError:
-            if amount == '':
+        except TypeError:
+            # No amount given is paying off all the money
+            if amount is None:
                 money = self.money['rfc']
             else:
-                self.send_message(room, '{} is not a valid amount of money'.format(
-                    amount,
-                ))
                 return
+        except ValueError:
+            self.send_message(room, '{} is not a valid amount of money'.format(
+                amount,
+            ))
+            return
         self.money[sender] += money
         self.money['rfc'] -= money
         self.save_state()
