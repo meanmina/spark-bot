@@ -310,6 +310,7 @@ class MessageHandler:
     def place_order(self, **kwargs):
         for person, order in self.orders:
             self.money[person] -= order['price']
+            self.money['rfc'] += order['price']
         self.send_message(kwargs.get('room'), 'Placing the following order:\n\n')
 
         # must be given matching regex to propagate command
@@ -322,16 +323,20 @@ class MessageHandler:
         self.save_state()
         self.send_message(room, 'done')
 
-    @cmd('(?i)i paid ([\d\.]+) for chicken')
+    @cmd('(?i)i paid( [\d\.]+)? for chicken')
     def paid_rfc(self, amount, room, sender, **kwargs):
         try:
             money = float(amount)
         except ValueError:
-            self.send_message(room, '{} is not a valid amount of money'.format(
-                amount,
-            ))
-        else:
-            self.money[sender] += money
+            if amount == '':
+                money = self.money['rfc']
+            else:
+                self.send_message(room, '{} is not a valid amount of money'.format(
+                    amount,
+                ))
+                return
+        self.money[sender] += money
+        self.money['rfc'] -= money
         self.save_state()
         self.send_message(room, 'done')
 
