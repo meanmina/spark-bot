@@ -298,13 +298,11 @@ class MessageHandler:
 
         self.send_message(
             kwargs.get('room'),
-            '{}\n\n'
-            '{}\n\n'
-            '{}{}'.format(
+            '{}\n\n{}\n\n{}{}'.format(
                 ', '.join('**{}** {}'.format(v, k) for k, v in dict(all_meals).items()),
                 '**{}** wings'.format(all_wings),
                 ', '.join('**{}** {}'.format(v, k) for k, v in dict(all_drinks).items()),
-                '' if not comments else '\n\n###Notes\n{}'.format('\n\n'.join(comments)),
+                '' if not comments else '\n\n{}'.format('\n\n'.join(comments)),
             ),
             markdown=True
         )
