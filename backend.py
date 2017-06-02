@@ -68,6 +68,7 @@ class MessageHandler:
         '+ -d=**drink** --> can of choice, no spaces allowed\n'
         '+ -no_wings --> no wings for this order (default is to have wings)\n'
         '+ -no_overwrite --> adds additional orders if this person already has one\n'
+        '+ -extra=**cost** --> The price of any extra items you are ordering\n'
         '+ -note --> anything after this will be added as a comment on the order\n'
     )
 
@@ -131,7 +132,7 @@ class MessageHandler:
             text = 'cluck {}'.format(self.default_orders[sender])
             self.order(text, room=room, sender=sender)
 
-    @cmd('(?i)cluck for (\w+) (\w)(?:$| )([ -=\w]*)')
+    @cmd('(?i)cluck for (\w+) (\w)(?:$| )([ -=\w.]*)')
     def order_other(self, person, meal, args, room, **kwargs):
         ''' pretend to be ordering from someone else - patch the arguments to the cmd decorator '''
         valid_people = set(member['personId'] for member in list_memberships(room)['items'])
@@ -142,7 +143,7 @@ class MessageHandler:
         # alter the sender and pass the command through
         self.order(text, room=room, sender=person)
 
-    @cmd('(?i)cluck (\w)(?:$| )([ -=\w]*)')
+    @cmd('(?i)cluck (\w)(?:$| )([ -=\w.]*)')
     def order(self, meal, args, room, sender, **kwargs):
         ''' put an order in for chicken '''
         display_name = get_display_name(sender)
@@ -179,6 +180,16 @@ class MessageHandler:
             price += 1
 
         drink = order_args.get('-d', 'pepsi')
+
+        try:
+            extra = float(order_args.get('-extra', '0'))
+        except ValueError:
+            self.send_message(
+                room,
+                'I didn\'t understand {} as an extra amount of money'.format(order_args['-extra'])
+            )
+        else:
+            price += extra
 
         if '-no_overwrite' not in order_args:
             self.orders = [order for order in self.orders if order[0] != sender]
