@@ -63,3 +63,18 @@ def list_memberships(room_id):
         headers=ADMIN_HEADERS,
     )
     return json.loads(r.text)
+
+
+def create_webhook(room_id):
+    return request.post(
+        API_TEMPLATE.format('webhooks'),
+        json={
+            'name': room_id,
+            'targetUrl': 'https://kernel-sanders.herokuapp.com/messages',
+            'resource': 'messages',
+            'event': 'created',
+            'filter': 'roomId={}'.format(room_id),
+            'secret': 'finger licking good'
+        }
+        headers=ADMIN_HEADERS,
+    )

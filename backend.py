@@ -7,7 +7,7 @@ import os
 import json
 from collections import defaultdict
 from bot_helpers import (MENTION_REGEX, PERSON_ID, create_message, get_person_info, list_messages,
-                         list_memberships)
+                         list_memberships, create_webhook)
 
 
 cmd_list = []
@@ -107,6 +107,17 @@ class MessageHandler:
     @cmd('(?i)help')
     def send_help(self, **kwargs):
         self.send_message(kwargs.get('room'), self.help_text, markdown=True)
+
+    @cmd('(?i)hook me up')
+    def create_webhook(self, sender, room, **kwargs):
+        if sender != os.environ['ADMIN_ID']:
+            self.send_message(room, 'Sorry, you need to be an admin for this')
+            return
+        r = create_webhook(room)
+        if r.ok:
+            self.send_message(room, 'You\'re good to go')
+        else:
+            self.send_message(room, 'Got {} as the create webhook response'.format(r.status_code))
 
     @cmd('(?i)add to menu: (\w+) (\w+) ([\d.]+) ?(\w)?')
     def add_to_menu(self, key, name, price, spicy, sender, room, **kwargs):
