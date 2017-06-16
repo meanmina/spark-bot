@@ -12,12 +12,6 @@ from bot_helpers import (MENTION_REGEX, PERSON_ID, create_message, get_person_in
 
 cmd_list = []
 
-MEALS = {
-    't': ['tower', 4.0],
-    'f': ['fillet', 3.5],
-    'p': ['popcorn', 4.0],
-}
-
 
 def cmd(regex):
     def cmd_decorator(fn):
@@ -82,6 +76,7 @@ class MessageHandler:
         self.default_orders = {}
         self.money = defaultdict(int)
         self.load_state()
+        self.menu = {}
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
@@ -110,6 +105,29 @@ class MessageHandler:
     @cmd('(?i)help')
     def send_help(self, **kwargs):
         self.send_message(kwargs.get('room'), self.help_text, markdown=True)
+
+    @cmd('(?i)add to menu: (\w+) (\w+) ([\d.]+)')
+    def add_to_menu(self, key, name, price, sender, room, **kwargs):
+        if sender != os.environ['ADMIN_ID']:
+            self.send_message(room, 'Sorry, this is an admin only command')
+            return
+
+        if key in self.menu:
+            self.send_message(room, 'there is already a menu item with this key')
+            return
+
+        if name in self.menu:
+            self.send_message(room, 'there is already a menu item with this name')
+            return
+
+        try:
+            p = float(price)
+        except ValueError:
+            self.send_message(room, '{} is not a valid cost'.format(price))
+            return
+
+        self.menu[key] = [name, p]
+        self.save_state()
 
     @cmd('(?i)bukaa')
     def odering_info(self, **kwargs):
@@ -154,11 +172,11 @@ class MessageHandler:
                 '{} has selected: famine'.format(display_name)
             )
             return
-        if meal not in MEALS:
+        if meal not in self.menu:
             self.send_message(room, 'I did not understand meal choice of {}'.format(meal))
             return
         else:
-            meal_name, price = MEALS[meal]
+            meal_name, price = self.menu[meal]
 
         args, *comment = args.split('-note ')
         order_args = {
@@ -402,7 +420,8 @@ class MessageHandler:
                 'orders': self.orders,
                 # convert money to regular dict
                 'money': dict(self.money),
-                'defaults': self.default_orders
+                'defaults': self.default_orders,
+                'menu': self.menu,
             },
             separators=(',', ':')
         )
@@ -416,6 +435,7 @@ class MessageHandler:
                 state = json.loads(text[6:])
                 self.orders = state.get('orders', [])
                 self.default_orders = state.get('defaults', {})
+                self.menu = state.get('menu', {})
 
                 # load money back into default dict
                 for person, amount in state.get('money', {}).items():
