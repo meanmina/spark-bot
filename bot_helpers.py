@@ -66,7 +66,7 @@ def list_memberships(room_id):
 
 
 def create_webhook(room_id):
-    return request.post(
+    return requests.post(
         API_TEMPLATE.format('webhooks'),
         json={
             'name': room_id,
@@ -75,6 +75,6 @@ def create_webhook(room_id):
             'event': 'created',
             'filter': 'roomId={}'.format(room_id),
             'secret': 'finger licking good'
-        }
+        },
         headers=ADMIN_HEADERS,
     )

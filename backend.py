@@ -109,7 +109,7 @@ class MessageHandler:
         self.send_message(kwargs.get('room'), self.help_text, markdown=True)
 
     @cmd('(?i)hook me up')
-    def create_webhook(self, sender, room, **kwargs):
+    def create_admin_webhook(self, sender, room, **kwargs):
         if sender != os.environ['ADMIN_ID']:
             self.send_message(room, 'Sorry, you need to be an admin for this')
             return
