@@ -136,7 +136,7 @@ class MessageHandler:
             kwargs.get('room'),
             self.orders_text.format(
                 '\n'.join([
-                    '+ **{}**={} (£{})'.format(key, name, price)
+                    '+ **{}**={} (£{:0.2f})'.format(key, name, price)
                     for key, (name, price, _) in self.menu.items()
                 ])
             ),
