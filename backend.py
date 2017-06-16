@@ -57,7 +57,8 @@ class MessageHandler:
     orders_text = (
         '###Menu\n'
         '+ <blank> --> places default order if you have one\n'
-        '+ **meal** --> t=tower, f=fillet, p=popcorn, b=beef burger\n'
+        '{}\n'
+        '####Options\n'
         '+ -s --> spicy flag, include if you want a spicy burger (ignored if meal is \'p\')\n'
         '+ -d=**drink** --> can of choice, no spaces allowed\n'
         '+ -no_wings --> no wings for this order (default is to have wings)\n'
@@ -106,15 +107,14 @@ class MessageHandler:
     def send_help(self, **kwargs):
         self.send_message(kwargs.get('room'), self.help_text, markdown=True)
 
-    @cmd('(?i)add to menu: (\w+) (\w+) ([\d.]+)')
-    def add_to_menu(self, key, name, price, sender, room, **kwargs):
+    @cmd('(?i)add to menu: (\w+) (\w+) ([\d.]+) ?(\w)?')
+    def add_to_menu(self, key, name, price, spicy, sender, room, **kwargs):
         if sender != os.environ['ADMIN_ID']:
             self.send_message(room, 'Sorry, this is an admin only command')
             return
 
         if key in self.menu:
-            self.send_message(room, 'there is already a menu item with this key')
-            return
+            self.send_message(room, 'Warning: Overwriting existing menu item')
 
         if name in self.menu:
             self.send_message(room, 'there is already a menu item with this name')
@@ -126,12 +126,22 @@ class MessageHandler:
             self.send_message(room, '{} is not a valid cost'.format(price))
             return
 
-        self.menu[key] = [name, p]
+        spicy = spicy or 'n'
+        self.menu[key] = [name, p, spicy == 'y']
         self.save_state()
 
     @cmd('(?i)bukaa')
     def odering_info(self, **kwargs):
-        self.send_message(kwargs.get('room'), self.orders_text, markdown=True)
+        self.send_message(
+            kwargs.get('room'),
+            self.orders_text.format(
+                '\n\n'.join([
+                    '**{}**={} (£{})'.format(key, name, price)
+                    for key, (name, price, _) in self.menu.items()
+                ])
+            ),
+            markdown=True
+        )
 
     @cmd('(?i)set default ([\w -=]+)')
     def set_default(self, order, sender, room, **kwargs):
@@ -176,7 +186,7 @@ class MessageHandler:
             self.send_message(room, 'I did not understand meal choice of {}'.format(meal))
             return
         else:
-            meal_name, price = self.menu[meal]
+            meal_name, price, spicy_flag = self.menu[meal]
 
         args, *comment = args.split('-note ')
         order_args = {
@@ -188,7 +198,7 @@ class MessageHandler:
         }
 
         spicy = None
-        if meal != 'p':
+        if spicy_flag:
             spicy = '-s' in order_args
 
         if '-no_wings' in order_args:
