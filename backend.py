@@ -56,8 +56,8 @@ class MessageHandler:
 
     orders_text = (
         '###Menu\n'
-        '+ <blank> --> places default order if you have one\n'
-        '{}\n'
+        '+ no args places your default order if you have one\n'
+        '{}\n\n'
         '####Options\n'
         '+ -s --> spicy flag, include if you want a spicy burger (ignored if meal is \'p\')\n'
         '+ -d=**drink** --> can of choice, no spaces allowed\n'
@@ -135,8 +135,8 @@ class MessageHandler:
         self.send_message(
             kwargs.get('room'),
             self.orders_text.format(
-                '\n\n'.join([
-                    '**{}**={} (£{})'.format(key, name, price)
+                '\n'.join([
+                    '+ **{}**={} (£{})'.format(key, name, price)
                     for key, (name, price, _) in self.menu.items()
                 ])
             ),
