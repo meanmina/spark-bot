@@ -75,9 +75,9 @@ class MessageHandler:
 
         self.orders = []
         self.default_orders = {}
+        self.menu = {}
         self.money = defaultdict(int)
         self.load_state()
-        self.menu = {}
 
     def parse_message(self, message):
         ''' parse a generic message from spark '''
