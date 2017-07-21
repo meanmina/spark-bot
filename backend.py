@@ -427,6 +427,13 @@ class MessageHandler:
         self.save_state()
         self.send_message(room, 'done')
 
+    @cmd('(?i)load state')
+    def real_time_load_state(self, room, sender, **kwargs):
+        if sender != os.environ['ADMIN_ID']:
+            self.send_message(room, 'Sorry, this is an admin only command')
+            return
+        self.load_state()
+
     def send_message(self, room, text, markdown=False):
         data = {'roomId': room}
         if markdown:
