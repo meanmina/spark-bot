@@ -251,7 +251,7 @@ class MessageHandler:
             u'{} ordered a {}{} meal with {} hot wings and a can of {}{}. '
             'That costs £{:0.2f}'.format(
                 display_name,
-                '' if meal == 'p' else ('spicy ' if spicy else 'regular '),
+                'spicy ' if spicy else '',
                 meal_name,
                 3 if wings else 0,
                 drink,
