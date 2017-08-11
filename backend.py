@@ -172,7 +172,7 @@ class MessageHandler:
             text = 'cluck {}'.format(self.default_orders[sender])
             self.order(text, room=room, sender=sender)
 
-    @cmd('(?i)cluck for (\w+) (\w)(?:$| )([ -=\w.]*)')
+    @cmd('(?i)cluck for (\w+) (\w+)(?:$| )([ -=\w.]*)')
     def order_other(self, person, meal, args, room, **kwargs):
         ''' pretend to be ordering from someone else - patch the arguments to the cmd decorator '''
         valid_people = set(member['personId'] for member in list_memberships(room)['items'])
@@ -183,7 +183,7 @@ class MessageHandler:
         # alter the sender and pass the command through
         self.order(text, room=room, sender=person)
 
-    @cmd('(?i)cluck (\w)(?:$| )([ -=\w.]*)')
+    @cmd('(?i)cluck (\w+)(?:$| )([ -=\w.]*)')
     def order(self, meal, args, room, sender, **kwargs):
         ''' put an order in for chicken '''
         display_name = get_display_name(sender)
