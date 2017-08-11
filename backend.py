@@ -119,7 +119,7 @@ class MessageHandler:
         else:
             self.send_message(room, 'Got {} as the create webhook response'.format(r.status_code))
 
-    @cmd('(?i)add to menu: (\w+) (\w+) ([\d.]+) ?(\w)?')
+    @cmd('(?i)add to menu: (\w+), ([\w ]+), ([\d.]+),? ?(\w)?')
     def add_to_menu(self, key, name, price, spicy, sender, room, **kwargs):
         if sender != os.environ['ADMIN_ID']:
             self.send_message(room, 'Sorry, this is an admin only command')
