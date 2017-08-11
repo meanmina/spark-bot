@@ -315,8 +315,8 @@ class MessageHandler:
                 all_meals[order['meal']] += 1
             else:
                 all_meals[
-                    '{} {}'.format(
-                        'spicy' if order['spicy'] else 'regular',
+                    '{}{}'.format(
+                        'spicy ' if order['spicy'] else '',
                         order['meal']
                     )
                 ] += 1
