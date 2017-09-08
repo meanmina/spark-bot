@@ -77,7 +77,7 @@ class MessageHandler:
         self.orders = []
         self.default_orders = {}
         self.menu = {}
-        self.money = defaultdict(int)
+        self.money = defaultdict(float)
         self.load_state()
 
     def parse_message(self, message):
@@ -263,7 +263,7 @@ class MessageHandler:
 
     @cmd('(?i)money')
     def show_money(self, room, **kwargs):
-        money = defaultdict(int)
+        money = defaultdict(float)
         for person, order in self.orders:
             money[person] -= order['price']
 
@@ -455,7 +455,7 @@ class MessageHandler:
             {
                 'orders': self.orders,
                 # convert money to regular dict
-                'money': {k: v for k, v in self.money.items() if abs(v) >= 0.01},
+                'money': dict(self.money),
                 'defaults': self.default_orders,
                 'menu': self.menu,
             },
@@ -474,6 +474,7 @@ class MessageHandler:
                 self.menu = state.get('menu', {})
 
                 # load money back into default dict
+                self.money = defaultdict(float)
                 for person, amount in state.get('money', {}).items():
                     self.money[person] = round(amount, 2)
                 break
