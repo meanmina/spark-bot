@@ -455,7 +455,7 @@ class MessageHandler:
             {
                 'orders': self.orders,
                 # convert money to regular dict
-                'money': dict(self.money),
+                'money': {k: v for k, v in self.money.items() if abs(v) >= 0.01},
                 'defaults': self.default_orders,
                 'menu': self.menu,
             },
