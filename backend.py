@@ -382,6 +382,13 @@ class MessageHandler:
 
     @cmd('(?i)i paid( [\d\.]+)? for chicken')
     def paid_rfc(self, amount, room, sender, **kwargs):
+        if self.orders:
+            self.send_message(kwargs.get('room'), 'placing outstanding orders first')
+            for person, order in self.orders:
+                self.money[person] -= order['price']
+                self.money['rfc'] += order['price']
+            self.orders = []
+            self.save_state()
         try:
             money = float(amount)
         except TypeError:
