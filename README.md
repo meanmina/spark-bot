@@ -17,7 +17,7 @@ Template for a RESTful api with most of the setup pre configured
     
     PERSON_ID=**Your bot's personId**
 
-    ADMIN_ROOM=**An admin rooms ID** - your bot will use this space for persistent storage
+    ADMIN_ROOM=**An admin room ID** - your bot will use this space for persistent storage
 
     ADMIN_ID=**Your personal spark ID** - So your bot knows when you're talking to it
 
