@@ -72,7 +72,7 @@ class MessageHandler:
         self.admin_room = os.environ['ADMIN_ROOM']
         self.send_message(self.admin_room, 'Hello')
 
-        self.db_cur = db_conn.cursor()
+        # self.db_cur = db_conn.cursor()
 
         self.orders = []
         self.default_orders = {}
