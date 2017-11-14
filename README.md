@@ -23,8 +23,8 @@ Template for a RESTful api with most of the setup pre configured
 
     ADMIN_TOKEN=**Your personal spark token** - so your bot can read all the messages you can
     
-6. Setup Heroku to autodeploy from pushes to your github repo
+6. (optional) Setup Heroku to autodeploy from pushes to your github repo
 
 7. Deploy Heroku instance
 
-8. Add bot into a room and type "hook me up". This registers a webhook on your spark account to send all messages seen to the bot.
+8. Add bot into a room and type "@<bot_name> hook me up". This registers a webhook on your spark account to send all messages seen in this room to the bot.
