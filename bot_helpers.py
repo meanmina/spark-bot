@@ -80,7 +80,7 @@ def create_webhook(room_id=None):
     else:
         # creating a generic webhook is done with bot's account
         headers = HEADERS
-        params['name'] = 'mentions'
+        params['name'] = 'all messages'
 
     return requests.post(
         API_TEMPLATE.format('webhooks'),
@@ -95,4 +95,4 @@ def check_own_webhook():
         headers=HEADERS,
     )
     hooks = [hook['name'] for hook in json.loads(r.text)['items']]
-    return 'mentions' in hooks
+    return 'all messages' in hooks
