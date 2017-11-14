@@ -7,7 +7,7 @@ import os
 import json
 from collections import defaultdict
 from bot_helpers import (MENTION_REGEX, PERSON_ID, create_message, get_person_info, list_messages,
-                         list_memberships, create_webhook)
+                         list_memberships, create_webhook, check_own_webhook)
 
 
 cmd_list = []
@@ -71,6 +71,11 @@ class MessageHandler:
     def __init__(self, db_conn):
         self.admin_room = os.environ['ADMIN_ROOM']
         self.send_message(self.admin_room, 'Hello')
+
+        if not check_own_webhook():
+            self.send_message(self.admin_room, 'Didn\'t find bot webhook, creating now')
+            create_webhook()
+            self.send_message(self.admin_room, 'done')
 
         # self.db_cur = db_conn.cursor()
 

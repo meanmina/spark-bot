@@ -65,16 +65,34 @@ def list_memberships(room_id):
     return json.loads(r.text)
 
 
-def create_webhook(room_id):
+def create_webhook(room_id=None):
+    params = {
+        'targetUrl': 'https://kernel-sanders.herokuapp.com/messages',
+        'resource': 'messages',
+        'event': 'created',
+        'secret': 'finger licking good',
+    }
+    if room_id is not None:
+        # creating a webhook from a room is done with admin's account
+        headers = ADMIN_HEADERS
+        params['name'] = room_id
+        params['filter'] = 'roomId={}'.format(room_id)
+    else:
+        # creating a generic webhook is done with bot's account
+        headers = HEADERS
+        params['name'] = 'mentions'
+
     return requests.post(
         API_TEMPLATE.format('webhooks'),
-        json={
-            'name': room_id,
-            'targetUrl': 'https://kernel-sanders.herokuapp.com/messages',
-            'resource': 'messages',
-            'event': 'created',
-            'filter': 'roomId={}'.format(room_id),
-            'secret': 'finger licking good'
-        },
-        headers=ADMIN_HEADERS,
+        json=params,
+        headers=headers,
     )
+
+
+def check_own_webhook():
+    r = requests.get(
+        API_TEMPLATE.format('webhooks'),
+        headers=HEADERS,
+    )
+    hooks = [hook['name'] for hook in json.loads(r.text)['items']]
+    return 'mentions' in hooks
