@@ -89,10 +89,24 @@ def create_webhook(room_id=None):
     )
 
 
-def check_own_webhook():
+def get_webhook_by_name(name, bot=True):
+    if bot:
+        headers = HEADERS
+    else:
+        headers = ADMIN_HEADERS
     r = requests.get(
         API_TEMPLATE.format('webhooks'),
-        headers=HEADERS,
+        headers=headers,
     )
-    hooks = [hook['name'] for hook in json.loads(r.text)['items']]
-    return 'all messages' in hooks
+    hooks = [hook for hook in json.loads(r.text)['items'] if hook['name'] == name]
+    if not hooks:
+        return None
+    else:
+        return hooks[0]['id']
+
+
+def delete_webhook(hook_id):
+    return requests.delete(
+        API_TEMPLATE.format('webhooks/' + hook_id),
+        headers=ADMIN_HEADERS,
+    )

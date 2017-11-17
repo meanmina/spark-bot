@@ -7,7 +7,7 @@ import os
 import json
 from collections import defaultdict
 from bot_helpers import (MENTION_REGEX, PERSON_ID, create_message, get_person_info, list_messages,
-                         list_memberships, create_webhook, check_own_webhook)
+                         list_memberships, create_webhook, get_webhook_by_name, delete_webhook)
 
 
 cmd_list = []
@@ -72,7 +72,7 @@ class MessageHandler:
         self.admin_room = os.environ['ADMIN_ROOM']
         self.send_message(self.admin_room, 'Hello')
 
-        if not check_own_webhook():
+        if get_webhook_by_name('all_messages') is None:
             self.send_message(self.admin_room, 'Didn\'t find bot webhook, creating now')
             create_webhook()
             self.send_message(self.admin_room, 'done')
@@ -123,6 +123,21 @@ class MessageHandler:
             self.send_message(room, 'You\'re good to go')
         else:
             self.send_message(room, 'Got {} as the create webhook response'.format(r.status_code))
+
+    @cmd('(?i)unhook me')
+    def remove_admin_webhook(self, sender, room, **kwargs):
+        if sender != os.environ['ADMIN_ID']:
+            self.send_message(room, 'Sorry, you need to be an admin for this')
+            return
+        hook_id = get_webhook_by_name(room, bot=False)
+        if hook_id is None:
+            self.send_message(room, 'I couldn\'t find a webhook for this room')
+        else:
+            r = delete_webhook(hook_id)
+            if r.ok:
+                self.send_message(room, 'deleted')
+            else:
+                self.send_message(room, 'Got back {}'.format(r.status_code))
 
     @cmd('(?i)add to menu: (\w+), ([\w ]+), ([\d.]+),? ?(\w)?')
     def add_to_menu(self, key, name, price, spicy, sender, room, **kwargs):
