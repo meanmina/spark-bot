@@ -72,7 +72,7 @@ class MessageHandler:
         self.admin_room = os.environ['ADMIN_ROOM']
         self.send_message(self.admin_room, 'Hello')
 
-        if get_webhook_by_name('all_messages') is None:
+        if get_webhook_by_name('all messages') is None:
             self.send_message(self.admin_room, 'Didn\'t find bot webhook, creating now')
             create_webhook()
             self.send_message(self.admin_room, 'done')
