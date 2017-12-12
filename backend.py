@@ -28,7 +28,7 @@ class MessageHandler:
 
     help_text = (
         '###Help\n'
-        'There is nothing to really help with'
+        '+ new'
     )
 
     def __init__(self, db_conn):
