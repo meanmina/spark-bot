@@ -67,10 +67,10 @@ def list_memberships(room_id):
 
 def create_webhook(room_id=None):
     params = {
-        'targetUrl': 'https://kernel-sanders.herokuapp.com/messages',
+        'targetUrl': 'https://doodlebot.herokuapp.com/messages',
         'resource': 'messages',
         'event': 'created',
-        'secret': 'finger licking good',
+        'secret': 'doodly doo',
     }
     if room_id is not None:
         # creating a webhook from a room is done with admin's account

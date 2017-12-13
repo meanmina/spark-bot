@@ -9,7 +9,7 @@ Template for a RESTful api with most of the setup pre configured
 
 3. Create a (free hobby-dev) heroku web app
 
-4. Change the name field in app.json to match your heroku app name (probably optional)
+4. Change the name field in app.json to match your heroku app name (probably optional) AND targetUrl in create_webhook()
 
 5. Configure the Heroku environment variables as follows:
     
