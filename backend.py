@@ -78,7 +78,7 @@ class MessageHandler:
         '{}\n\n' # description
     )
     poll_option_text = (
-        '{}) {}\n' # num_votes, option
+        '{}. {}\n' # num_votes, option
     )
 
     orders_text = (
@@ -151,9 +151,11 @@ class MessageHandler:
         else:
             self.send_message(room, 'Got {} as the create webhook response'.format(r.status_code))
 
-    @cmd('(?i)open (\w+) (\w+) ([^,]+)')
-    def open_poll(self, title, description, options, room, sender, **kwargs):
+    @cmd('(?i)open (\w+) (\w+)')
+    def open_poll(self, title, options, room, sender, **kwargs):
         display_name = get_display_name(sender)
+        poll_options = options.split(',')
+        print("poll_options ", poll_options)
 
         poll = Poll(title, description, options, room)
         if room in self.room_polls:
@@ -294,9 +296,10 @@ class MessageHandler:
     def post_poll_details(self, poll, room):
         # add title and desc for poll
         poll_details = self.poll_details_text.format(poll.title, poll.description)
+        print("post options ", poll.options)
         # add votes and options
         for idx, opt in enumerate(poll.options):
-            poll_details += poll_option_text.format(poll.votes[idx], opt)
+            poll_details += self.poll_option_text.format(poll.votes[idx], opt)
         # send poll_details message
         self.send_message(room,
             poll_details,
@@ -312,7 +315,7 @@ class MessageHandler:
             if count >= 3:
                 break
             # add poll winner to list
-            poll_winners += poll_option_text.format(poll.votes[x], poll.options[x])
+            poll_winners += self.poll_option_text.format(poll.votes[x], poll.options[x])
         # send poll_details message
         self.send_message(room,
             poll_winners,
