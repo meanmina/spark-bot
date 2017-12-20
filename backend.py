@@ -57,7 +57,7 @@ class MessageHandler:
         '+ set default **order** --> Set your default order\n'
         '+ help --> Display this message\n'
         '###Doodle\n'
-        '* open **title** **description** [options] --> Open new poll with options (comma separated list)\n'
+        '* open **title** [options] --> Open new poll with options (comma separated list)\n'
         '* vote **title** [options] --> Vote for poll with options\n'
         '* close **title** --> Close poll and pick winner\n'
         '* reopen **title** --> Reopen poll\n'
@@ -151,13 +151,12 @@ class MessageHandler:
         else:
             self.send_message(room, 'Got {} as the create webhook response'.format(r.status_code))
 
-    @cmd('(?i)open (\w+) (\w+)')
+    @cmd('(?i)open (\w+) (\[,?\w+*,?\])')
     def open_poll(self, title, options, room, sender, **kwargs):
         display_name = get_display_name(sender)
-        poll_options = options.split(',')
-        print("poll_options ", poll_options)
+        print("options ", options)
 
-        poll = Poll(title, description, options, room)
+        poll = Poll(title, options, room)
         if room in self.room_polls:
             self.room_polls[room].append(poll)
         else:

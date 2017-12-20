@@ -7,9 +7,8 @@ class Poll:
   votes = []
   closed = False
 
-  def __init__(self, title, description, options, room):
+  def __init__(self, title, options, room):
     self.title = title
-    self.description = description
     self.options = options
     self.room = room
     self.votes = [0 for x in options]
