@@ -62,6 +62,7 @@ class MessageHandler:
         '* close **title** --> Close poll and pick winner\n'
         '* reopen **title** --> Reopen poll\n'
         '* details **title** --> Get poll details\n'
+        '* list --> Get list of active polls\n'
         '###TO DO\n'
         '+ add deadline --> close on deadline\n'
         '+ set notification --> notify regularly before close'
@@ -150,19 +151,9 @@ class MessageHandler:
         else:
             self.send_message(room, 'Got {} as the create webhook response'.format(r.status_code))
 
-    @cmd('(?i)open (\w+) (\w+)(?:$| )([ -=\w.]*)')
+    @cmd('(?i)open (\w+) (\w+) ([^,]+)')
     def open_poll(self, title, description, options, room, sender, **kwargs):
         display_name = get_display_name(sender)
-
-        if len(title) == 0:
-            self.send_message(room, '@{}, you need to set a title :-|'.format(display_name))
-            return
-        if len(description) == 0:
-            self.send_message(room, 'You could have added a description :-|')
-        options = options.split(',')
-        if len(options) <= 1:
-            self.send_message(room, '@{}, what are we even voting for? :-?'.format(display_name))
-            return
 
         poll = Poll(title, description, options, room)
         if room in self.room_polls:
@@ -172,7 +163,7 @@ class MessageHandler:
         self.send_message(room, 'Poll open =)')
         self.post_poll_details(poll, room)
 
-    @cmd('(?i)vote (\w+) (?:$| )([ -=\w.]*)')
+    @cmd('(?i)vote (\w+) ([^,]+)')
     def vote_poll(self, title, options, room, sender, **kwargs):
         display_name = get_display_name(sender)
 
@@ -184,7 +175,9 @@ class MessageHandler:
             self.send_message(room, '@{}, what are you even voting for? :-?'.format(display_name))
             return
 
-        polls = self.room_polls[room]
+        polls = None
+        if room in self.room_polls:
+            polls = self.room_polls[room]
         poll = None
 
         if not polls:
@@ -210,7 +203,9 @@ class MessageHandler:
             self.send_message(room, '@{}, which poll am I supposed to close? :-|'.format(display_name))
             return
 
-        polls = self.room_polls[room]
+        polls = None
+        if room in self.room_polls:
+            polls = self.room_polls[room]
         poll = None
 
         if not polls:
@@ -235,7 +230,9 @@ class MessageHandler:
             self.send_message(room, '@{}, which poll am I supposed to reopen? :-|'.format(display_name))
             return
 
-        polls = self.room_polls[room]
+        polls = None
+        if room in self.room_polls:
+            polls = self.room_polls[room]
         poll = None
 
         if not polls:
@@ -254,7 +251,9 @@ class MessageHandler:
 
     @cmd('(?i)details (\w+)')
     def get_poll_details(self, title, room, sender, **kwargs):
-        polls = self.room_polls[room]
+        polls = None
+        if room in self.room_polls:
+            polls = self.room_polls[room]
         poll = None
 
         if not polls:
@@ -267,6 +266,30 @@ class MessageHandler:
         else:
             poll = valid_polls[title]
         self.post_poll_details(poll, room)
+
+    @cmd('(?i)list')
+    def list_polls(self, room, sender, **kwargs):
+        polls = None
+        if room in self.room_polls:
+            polls = self.room_polls[room]
+        polls_in_room = (
+            '###Polls in this room:\n'
+        )
+
+        if not polls:
+            polls_in_room += '* **NONE**'
+        else:
+            # loop through polls and add titles to list
+            for poll in polls:
+                if poll.closed:
+                    continue
+                polls_in_room += '* {}\n'.format(poll.title)
+        # send msg with the list of polls
+        self.send_message(
+            room,
+            polls_in_room,
+            markdown=True
+        )
 
     def post_poll_details(self, poll, room):
         # add title and desc for poll
